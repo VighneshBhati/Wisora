@@ -1,0 +1,10 @@
+export { HeroSectionSkeleton } from './HeroSectionSkeleton';
+export { StatsGridSkeleton } from './StatsGridSkeleton';
+export { RecentCoursesSkeleton } from './RecentCoursesSkeleton';
+export { QuickActionsSkeleton } from './QuickActionsSkeleton';
+export { TeachingProgressSkeleton } from './TeachingProgressSkeleton';
+export { PerformanceMetricsSkeleton } from './PerformanceMetricsSkeleton';
+export * from './RecentActivitySkeleton';
+export * from './UpcomingTasksSkeleton';
+export * from './StudentInsightsSkeleton';
+export * from './StudentDetailSkeleton';

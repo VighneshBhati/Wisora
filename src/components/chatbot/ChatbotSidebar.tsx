@@ -1,0 +1,805 @@
+import React, { useState, useRef, useEffect } from 'react';
+import { useSelector } from 'react-redux';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { MessageSquare, Send, X, Bot, User, ChevronLeft, Sparkles, Settings, Zap } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { resolveEntityId } from './CourseResolver';
+import { useChatbot } from '@/contexts/ChatbotContext';
+import type { RootState } from '@/store/store';
+import ReactMarkdown from 'react-markdown';
+import { cn } from '@/lib/utils';
+import { useDailyMessagesLimit } from '@/hooks/useAiAssistantSettings';
+import { useTranslation } from 'react-i18next';
+import { fetchAI, type AIMessage } from '@/utils/geminiConfig';
+
+interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+}
+
+interface ActionRequest {
+  action: 'create_course' | 'edit_course' | 'delete_course' | 'create_lesson' | 'edit_lesson' | 'delete_lesson';
+  description: string;
+  data: any;
+  originalMessage?: string;
+}
+
+interface CourseActionResponse {
+  action: string;
+  id?: string;
+  title?: string;
+  description?: string;
+  price?: number;
+  status?: string;
+  instructor_id?: string;
+  message?: string;
+}
+
+const TEACHER_SYSTEM_PROMPT = `AI assistant on KIA. Help experts with sessions, bookings, earnings. Reply in ≤3 sentences.`;
+
+const TEACHER_ACTION_SYSTEM_PROMPT = `AI on KIA. Output JSON array only. Actions: create_course, edit_course, delete_course. Fields: action, title, description, price, status. If no action needed: [{"action":"none","message":"..."}]`;
+
+const STUDENT_SYSTEM_PROMPT = `AI on KIA. Help users find experts, book sessions, get advice. Reply in ≤3 sentences.`;
+
+// Simple local responses for common greetings — saves API quota
+const LOCAL_RESPONSES: Record<string, string> = {
+  'hi': 'Hi there! How can I help you today? You can ask me about finding experts, booking sessions, or career advice.',
+  'hello': 'Hello! I\'m your KIA assistant. Ask me anything about finding the right expert or booking a session.',
+  'hey': 'Hey! What can I help you with today?',
+  'hie': 'Hi there! How can I help you today?',
+  'thanks': 'You\'re welcome! Let me know if you need anything else.',
+  'thank you': 'Happy to help! Feel free to ask anything.',
+  'bye': 'Goodbye! Come back anytime you need guidance.',
+};
+
+function getLocalResponse(message: string): string | null {
+  const normalized = message.trim().toLowerCase().replace(/[!?.]/g, '');
+  return LOCAL_RESPONSES[normalized] || null;
+}
+
+async function sendMessageToGemini({ message, userRole, actionMode, history }: { message: string, userRole: string, actionMode: boolean, history: ChatMessage[] }): Promise<CourseActionResponse[] | { message: string }> {
+  // Check for local response first — saves quota
+  if (!actionMode) {
+    const local = getLocalResponse(message);
+    if (local) return { message: local };
+  }
+
+  const systemPrompt = userRole === 'teacher'
+    ? (actionMode ? TEACHER_ACTION_SYSTEM_PROMPT : TEACHER_SYSTEM_PROMPT)
+    : STUDENT_SYSTEM_PROMPT;
+
+  // Only last 4 messages for context — saves tokens
+  const recentHistory = history.slice(-4);
+  const messages: AIMessage[] = [
+    ...recentHistory.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
+    { role: 'user' as const, content: message }
+  ];
+
+  try {
+    const response = await fetchAI(messages, {
+      systemPrompt,
+      temperature: 0.2,
+      maxTokens: 250,
+      responseFormat: actionMode && userRole === 'teacher' ? 'json' : 'text'
+    });
+
+    if (actionMode && userRole === 'teacher') {
+      try {
+        return JSON.parse(response.content);
+      } catch {
+        return { message: response.content };
+      }
+    }
+    return { message: response.content };
+  } catch (error) {
+    throw new Error(`API request failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+// Simple Arabic detection
+const isArabic = (text: string) => /[\u0600-\u06FF]/.test(text);
+
+export const ChatbotSidebar = () => {
+  const { t } = useTranslation('other');
+  const { isOpen, closeChatbot, openChatbot, sendSystemMessage, systemMessage } = useChatbot();
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [inputValue, setInputValue] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [actionMode, setActionMode] = useState(false);
+  const [pendingAction, setPendingAction] = useState<ActionRequest | null>(null);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [dailyMessageCount, setDailyMessageCount] = useState(0);
+  const [isRateLimited, setIsRateLimited] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messageIdCounter = useRef(0);
+  const { user } = useSelector((state: RootState) => state.auth);
+  const userRole = user?.role || 'student';
+  const { toast } = useToast();
+  const { limit: dailyMessagesLimit } = useDailyMessagesLimit();
+
+  // Track component mount
+  React.useEffect(() => {
+    console.log('ChatbotSidebar mounted');
+    return () => {
+      console.log('ChatbotSidebar unmounted');
+    };
+  }, []);
+
+  // Check daily message count for students
+  useEffect(() => {
+    if (userRole === 'student') {
+      const today = new Date().toDateString();
+      const dailyMessages = localStorage.getItem(`daily_messages_${userRole}_${today}`);
+      const count = dailyMessages ? parseInt(dailyMessages) : 0;
+      setDailyMessageCount(count);
+      setIsRateLimited(count >= dailyMessagesLimit);
+    }
+  }, [userRole, dailyMessagesLimit]);
+
+  // Generate unique message ID
+  const generateMessageId = () => {
+    messageIdCounter.current += 1;
+    const timestamp = Date.now();
+    const random = Math.random().toString(36).substr(2, 9);
+    const counter = messageIdCounter.current;
+    return `${timestamp}-${counter}-${random}`;
+  };
+
+  // Load chat history from localStorage on mount
+  useEffect(() => {
+    const savedMessages = localStorage.getItem(`chatbot_history_${userRole}`);
+    if (savedMessages) {
+      try {
+        const parsed = JSON.parse(savedMessages);
+        setMessages(parsed.map((msg: any) => ({
+          ...msg,
+          timestamp: new Date(msg.timestamp)
+        })));
+        // Update counter to avoid conflicts
+        const maxId = Math.max(...parsed.map((msg: any) => {
+          const parts = msg.id.split('-');
+          return parseInt(parts[1]) || 0;
+        }), 0);
+        messageIdCounter.current = maxId;
+      } catch (error) {
+        console.error('Failed to load chat history:', error);
+      }
+    }
+  }, [userRole]);
+
+  // Save messages to localStorage whenever messages change
+  useEffect(() => {
+    if (messages.length > 0) {
+      localStorage.setItem(`chatbot_history_${userRole}`, JSON.stringify(messages));
+    }
+  }, [messages, userRole]);
+
+  // Update daily message count when user sends a message
+  const updateDailyMessageCount = () => {
+    if (userRole === 'student' && !isRateLimited) {
+      const today = new Date().toDateString();
+      // Read current count directly from localStorage to avoid state sync issues
+      const storedCount = localStorage.getItem(`daily_messages_${userRole}_${today}`);
+      const currentCount = (storedCount ? parseInt(storedCount) : 0) + 1;
+      setDailyMessageCount(currentCount);
+      localStorage.setItem(`daily_messages_${userRole}_${today}`, currentCount.toString());
+      
+      if (currentCount >= dailyMessagesLimit) {
+        setIsRateLimited(true);
+        toast({
+          title: t('uiComponents.chatbot.dailyLimitReached'),
+          description: t('uiComponents.chatbot.comeBackTomorrow'),
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
+  // Auto scroll to bottom when new messages arrive
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  // Handle system messages from context (e.g., from QuizResults)
+  useEffect(() => {
+    if (systemMessage && isOpen) {
+      const handleSystemMessage = async () => {
+      // Check rate limit for students before processing system message
+      if (userRole === 'student' && isRateLimited) {
+        toast({
+          title: t('uiComponents.chatbot.dailyLimitReached'),
+          description: t('uiComponents.chatbot.comeBackTomorrow'),
+          variant: "destructive",
+        });
+        // Clear the system message without processing
+        sendSystemMessage('');
+        return;
+      }
+
+      // Create a user message from the system message
+      const userMessage: ChatMessage = {
+        id: generateMessageId(),
+        role: 'user',
+        content: systemMessage,
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, userMessage]);
+      
+      // Update daily message count for students
+      if (userRole === 'student') {
+        updateDailyMessageCount();
+      }
+      
+      await sendMessageToGeminiAPI(systemMessage);
+      
+      // Clear the system message
+      sendSystemMessage('');
+      };
+      handleSystemMessage();
+    }
+  }, [systemMessage, isOpen, userRole, isRateLimited]);
+
+  const sendMessageToGeminiAPI = async (message: string) => {
+    setIsLoading(true);
+    try {
+      const response = await sendMessageToGemini({ message, userRole, actionMode, history: messages });
+
+      if (Array.isArray(response)) {
+        // Handle action mode response
+        const validActions = response.filter(action => action.action && action.action !== 'none');
+        
+        if (validActions.length > 0) {
+          const firstAction = validActions[0];
+          
+          // For delete and edit operations, resolve the entity ID
+          let resolvedData = { ...firstAction };
+          if ((firstAction.action === 'delete_course' || firstAction.action === 'edit_course') && userRole === 'teacher') {
+            const { data: { user: currentUser } } = await supabase.auth.getUser();
+            if (currentUser) {
+              const resolvedId = await resolveEntityId(message, 'course', currentUser.id);
+              if (resolvedId) {
+                resolvedData.id = resolvedId;
+              } else {
+                // If we can't resolve the ID, show an error
+                const errorMessage: ChatMessage = {
+                  id: generateMessageId(),
+                  role: 'assistant',
+                  content: t('uiComponents.chatbot.courseNotFound', { courseName: message }),
+                  timestamp: new Date()
+                };
+                setMessages(prev => [...prev, errorMessage]);
+                setIsLoading(false);
+                return;
+              }
+            }
+          }
+
+          // Set pending action for confirmation
+          setPendingAction({
+            action: resolvedData.action as any,
+            description: t('uiComponents.chatbot.actionDescription', { 
+              action: resolvedData.action.replace('_', ' '), 
+              title: resolvedData.title || resolvedData.id 
+            }),
+            data: resolvedData,
+            originalMessage: message
+          });
+          setShowConfirmation(true);
+        } else {
+          // No valid actions, treat as regular response
+          const assistantMessage: ChatMessage = {
+            id: generateMessageId(),
+            role: 'assistant',
+            content: (response as any).message || 'I understand your request. How can I help you further?',
+            timestamp: new Date()
+          };
+          setMessages(prev => [...prev, assistantMessage]);
+        }
+      } else {
+        // Regular response
+        const assistantMessage: ChatMessage = {
+          id: generateMessageId(),
+          role: 'assistant',
+          content: (response as any).message || 'I understand your request. How can I help you further?',
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, assistantMessage]);
+      }
+    } catch (error: any) {
+      console.error('Chatbot error:', error);
+      const isQuotaError = error?.message?.includes('429') || error?.message?.includes('quota') || error?.message?.includes('rate');
+      const errorMessage: ChatMessage = {
+        id: generateMessageId(),
+        role: 'assistant',
+        content: isQuotaError
+          ? 'The AI service is temporarily rate-limited (free tier quota reached). Please wait a minute and try again, or try a simpler question.'
+          : `Error: ${error?.message || 'Unknown error'}. Check browser console for details.`,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const sendMessage = async () => {
+    if (!inputValue.trim() || isLoading) return;
+    
+    // Check rate limit for students
+    if (userRole === 'student' && isRateLimited) {
+      toast({
+        title: t('uiComponents.chatbot.dailyLimitReached'),
+        description: t('uiComponents.chatbot.comeBackTomorrow'),
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const userMessage: ChatMessage = {
+      id: generateMessageId(),
+      role: 'user',
+      content: inputValue,
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    const currentMessage = inputValue;
+    setInputValue('');
+    
+    // Update daily message count for students
+    updateDailyMessageCount();
+    
+    await sendMessageToGeminiAPI(currentMessage);
+  };
+
+  const executeAction = async () => {
+    if (!pendingAction) return;
+
+    try {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (!currentUser) {
+        toast({
+          title: t('uiComponents.chatbot.error'),
+          description: t('uiComponents.chatbot.userNotAuthenticated'),
+          variant: "destructive",
+        });
+        return;
+      }
+
+      switch (pendingAction.action) {
+        case 'create_course':
+          const { error: createError } = await supabase
+            .from('courses')
+            .insert([
+              {
+                title: pendingAction.data.title,
+                description: pendingAction.data.description,
+                price: pendingAction.data.price || 0,
+                instructor_id: currentUser.id,
+                status: pendingAction.data.status || 'draft'
+              }
+            ]);
+
+          if (createError) throw createError;
+          
+          toast({
+            title: t('uiComponents.chatbot.success'),
+            description: t('uiComponents.chatbot.courseCreated'),
+          });
+          break;
+
+        case 'delete_course':
+          if (!pendingAction.data.id) {
+            throw new Error(t('uiComponents.chatbot.courseIdRequired', { action: 'deletion' }));
+          }
+          
+          const { error: deleteError } = await supabase
+            .from('courses')
+            .delete()
+            .eq('id', pendingAction.data.id)
+            .eq('instructor_id', currentUser.id);
+
+          if (deleteError) throw deleteError;
+          
+          toast({
+            title: t('uiComponents.chatbot.success'),
+            description: t('uiComponents.chatbot.courseDeleted'),
+          });
+          break;
+
+        case 'edit_course':
+          if (!pendingAction.data.id) {
+            throw new Error(t('uiComponents.chatbot.courseIdRequired', { action: 'editing' }));
+          }
+          
+          const updateData = { ...pendingAction.data };
+          delete updateData.id; // Remove id from update data
+          delete updateData.action; // Remove action from update data
+          delete updateData.message; // Remove message from update data
+        
+          const { error: editError } = await supabase
+            .from('courses')
+            .update(updateData)
+            .eq('id', pendingAction.data.id)
+            .eq('instructor_id', currentUser.id);
+
+          if (editError) throw editError;
+          
+          toast({
+            title: t('uiComponents.chatbot.success'),
+            description: t('uiComponents.chatbot.courseUpdated'),
+          });
+          break;
+
+        default:
+          toast({
+            title: t('uiComponents.chatbot.info'),
+            description: t('uiComponents.chatbot.actionNotImplemented'),
+          });
+      }
+
+      // Add success message to chat
+      const successMessage: ChatMessage = {
+        id: generateMessageId(),
+        role: 'assistant',
+        content: t('uiComponents.chatbot.actionCompleted', { description: pendingAction.description }),
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, successMessage]);
+
+    } catch (error: any) {
+      console.error('Error executing action:', error);
+      toast({
+        title: t('uiComponents.chatbot.error'),
+        description: error.message || t('uiComponents.chatbot.failedToExecuteAction'),
+        variant: "destructive",
+      });
+
+      // Add error message to chat
+      const errorMessage: ChatMessage = {
+        id: generateMessageId(),
+        role: 'assistant',
+        content: t('uiComponents.chatbot.actionFailed', { error: error.message }),
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setShowConfirmation(false);
+      setPendingAction(null);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
+
+  const clearHistory = () => {
+    setMessages([]);
+    localStorage.removeItem(`chatbot_history_${userRole}`);
+  };
+
+  return (
+    <>
+      {/* Sidebar Content: fill the panel */}
+      <div
+        className={`fixed inset-0 flex justify-end items-stretch transition-all duration-300 z-[99999] ${isOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}
+        style={{ visibility: isOpen ? 'visible' : 'hidden' }}
+      >
+        {isOpen && (
+          <div className="w-full h-full flex flex-col">
+            {/* Header */}
+            <div className="p-4 border-b border-border/20 bg-background/80 backdrop-blur-sm">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-xl flex items-center justify-center">
+                    <Bot className="h-5 w-5 text-black" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-foreground">{t('uiComponents.chatbot.aiAssistant')}</h3>
+                    <p className="text-xs text-muted-foreground capitalize">
+                      {userRole === 'teacher' ? t('uiComponents.chatbot.teacherHelper') : t('uiComponents.chatbot.studentHelper')}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearHistory}
+                    className="text-muted-foreground hover:text-primary-400 hover:bg-primary-400/10"
+                    title={t('uiComponents.chatbot.clearChatHistory')}
+                  >
+                    <Sparkles className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={closeChatbot}
+                    className="text-muted-foreground hover:text-primary-400 hover:bg-primary-400/10"
+                    title={t('uiComponents.chatbot.closeChatbot')}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Action Mode Toggle for Teachers */}
+              {userRole === 'teacher' && (
+                <div className="flex items-center justify-between mt-4 p-4 rounded-2xl bg-gradient-to-r from-primary-500/10 via-secondary-500/10 to-primary-500/10 border border-primary-500/20 backdrop-blur-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-lg flex items-center justify-center">
+                      <Zap className="h-4 w-4 text-black" />
+                    </div>
+                    <div>
+                      <Label htmlFor="action-mode" className="text-sm font-semibold text-foreground cursor-pointer">{t('uiComponents.chatbot.actionMode')}</Label>
+                      <p className="text-xs text-muted-foreground">{t('uiComponents.chatbot.actionModeDescription')}</p>
+                    </div>
+                  </div>
+                  <Switch
+                    id="action-mode"
+                    checked={actionMode}
+                    onCheckedChange={setActionMode}
+                    className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-primary-500 data-[state=checked]:to-secondary-500"
+                  />
+                </div>
+              )}
+
+              {/* Daily Message Counter for Students */}
+              {userRole === 'student' && (
+                <div className={`flex items-center justify-between mt-4 p-4 rounded-2xl backdrop-blur-sm border ${
+                  isRateLimited 
+                    ? 'bg-gradient-to-r from-red-500/10 via-orange-500/10 to-red-500/10 border-red-500/20' 
+                    : 'bg-gradient-to-r from-primary-500/10 via-secondary-500/10 to-primary-500/10 border-primary-500/20'
+                }`}>
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                      isRateLimited 
+                        ? 'bg-gradient-to-br from-red-500 to-orange-500' 
+                        : 'bg-gradient-to-br from-primary-500 to-secondary-500'
+                    }`}>
+                      <MessageSquare className="h-4 w-4 text-white" />
+                    </div>
+                    <div>
+                      <div className="text-sm font-semibold text-foreground">
+                        {t('uiComponents.chatbot.dailyMessages')}
+                        {isRateLimited && <span className="ml-2 text-red-400">({t('uiComponents.chatbot.limitReached')})</span>}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {isRateLimited 
+                          ? t('uiComponents.chatbot.comeBackTomorrow') 
+                          : t('uiComponents.chatbot.messagesUsedToday', { count: dailyMessageCount, limit: dailyMessagesLimit })
+                        }
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="text-2xl font-bold text-foreground">{dailyMessageCount}</div>
+                    <div className="text-xs text-muted-foreground">/ {dailyMessagesLimit}</div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Messages */}
+            <ScrollArea className="flex-1 p-4">
+              <div className="space-y-4">
+                {messages.length === 0 && (
+                  <div className="text-center py-8">
+                    <div className="w-16 h-16 bg-gradient-to-br from-primary-500/20 to-secondary-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                      <Bot className="h-8 w-8 text-primary-400" />
+                    </div>
+                    <h4 className="font-medium text-primary-400 mb-2">{t('uiComponents.chatbot.welcomeToAiAssistant')}</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {userRole === 'teacher' ? 
+                        t('uiComponents.chatbot.teacherWelcomeMessage') :
+                        t('uiComponents.chatbot.studentWelcomeMessage')
+                      }
+                    </p>
+                  </div>
+                )}
+                
+                {messages.map((message) => {
+                  const isMsgArabic = isArabic(message.content);
+                  return (
+                    <div
+                      key={message.id}
+                      className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                    >
+                      {message.role === 'assistant' && (
+                        <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-full flex items-center justify-center flex-shrink-0">
+                          <Bot className="h-4 w-4 text-black" />
+                        </div>
+                      )}
+                      <div
+                        className={`max-w-[80%] p-3 rounded-2xl ${
+                          message.role === 'user'
+                            ? 'bg-gradient-to-r from-primary-500 to-secondary-500 text-black'
+                            : 'bg-white/10 backdrop-blur-sm border border-white/10'
+                        }`}
+                      >
+                        {message.role === 'assistant' ? (
+                          <ReactMarkdown
+                            components={{
+                              p: ({ node, ...props }) => (
+                                <p
+                                  className={cn(
+                                    'whitespace-pre-wrap break-words mb-1.5 sm:mb-2 md:mb-3 last:mb-0',
+                                    isMsgArabic && 'text-right'
+                                  )}
+                                  dir={isMsgArabic ? 'rtl' : 'ltr'}
+                                  {...props}
+                                />
+                              ),
+                              strong: ({ node, ...props }) => <strong className="font-bold" {...props} />,
+                              table: ({ node, ...props }) => <div className="overflow-x-auto w-full my-2 sm:my-3 custom-scrollbar"><table className="w-full border-collapse" {...props} /></div>,
+                              thead: ({ node, ...props }) => <thead className="bg-primary/5" {...props} />,
+                              tbody: ({ node, ...props }) => <tbody {...props} />,
+                              tr: ({ node, ...props }) => <tr className="border-b border-gray-200 dark:border-gray-700" {...props} />,
+                              th: ({ node, ...props }) => <th className="py-1 px-2 sm:py-1.5 sm:px-3 text-left font-medium text-xs sm:text-sm" {...props} />,
+                              td: ({ node, ...props }) => <td className="py-1 px-2 sm:py-1.5 sm:px-3 text-xs sm:text-sm" {...props} />,
+                              ul: ({ node, ...props }) => (
+                                <ul
+                                  className={cn(
+                                    'mb-1.5 sm:mb-2 md:mb-3',
+                                    isMsgArabic ? 'pr-3 sm:pr-4' : 'pl-3 sm:pl-4',
+                                    isMsgArabic ? 'list-disc-rtl' : 'list-disc'
+                                  )}
+                                  {...props}
+                                />
+                              ),
+                              ol: ({ node, ...props }) => (
+                                <ol
+                                  className={cn(
+                                    'mb-1.5 sm:mb-2 md:mb-3',
+                                    isMsgArabic ? 'pr-3 sm:pr-4' : 'pl-3 sm:pl-4',
+                                    isMsgArabic ? 'list-decimal-rtl' : 'list-decimal'
+                                  )}
+                                  {...props}
+                                />
+                              ),
+                              li: ({ node, ...props }) => <li className="mb-0.5" {...props} />,
+                              a: ({ node, href, ...props }) => <a href={href} className="text-primary underline" target="_blank" rel="noopener noreferrer" {...props} />,
+                              blockquote: ({ node, ...props }) => (
+                                <blockquote
+                                  className={cn(
+                                    'py-1 my-1.5 sm:my-2 md:my-3 italic text-sm sm:text-base',
+                                    isMsgArabic
+                                      ? 'border-r-4 border-gray-300 dark:border-gray-600 pr-2 sm:pr-3'
+                                      : 'border-l-4 border-gray-300 dark:border-gray-600 pl-2 sm:pl-3'
+                                  )}
+                                  {...props}
+                                />
+                              ),
+                              code: ({ node, ...props }) => <code className="bg-gray-100 dark:bg-gray-800 rounded px-1 py-0.5 text-xs" {...props} />,
+                              h1: ({ node, ...props }) => <h1 className={cn('text-lg sm:text-xl md:text-2xl font-bold my-1.5 sm:my-2 md:my-3', isMsgArabic && 'text-right')} {...props} />,
+                              h2: ({ node, ...props }) => <h2 className={cn('text-base sm:text-lg md:text-xl font-bold my-1.5 sm:my-2', isMsgArabic && 'text-right')} {...props} />,
+                              h3: ({ node, ...props }) => <h3 className={cn('text-sm sm:text-base md:text-lg font-bold my-1 sm:my-1.5', isMsgArabic && 'text-right')} {...props} />,
+                              h4: ({ node, ...props }) => <h4 className={cn('text-sm sm:text-base font-bold my-1 sm:my-1.5', isMsgArabic && 'text-right')} {...props} />,
+                              img: ({ node, ...props }) => <img className="max-w-full h-auto rounded-lg my-1.5 sm:my-2 md:my-3" {...props} />
+                            }}
+                          >
+                            {message.content}
+                          </ReactMarkdown>
+                        ) : (
+                          <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
+                        )}
+                        <span className="text-xs opacity-70 mt-1 block">
+                          {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                      {message.role === 'user' && (
+                        <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-full flex items-center justify-center flex-shrink-0">
+                          <User className="h-4 w-4 text-white" />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+                
+                {isLoading && (
+                  <div className="flex gap-3 justify-start">
+                    <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-full flex items-center justify-center">
+                      <Bot className="h-4 w-4 text-black" />
+                    </div>
+                    <div className="bg-white/10 backdrop-blur-sm border border-white/10 p-3 rounded-2xl">
+                      <div className="flex space-x-1">
+                        <div className="w-2 h-2 bg-primary-400 rounded-full animate-bounce"></div>
+                        <div className="w-2 h-2 bg-primary-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                        <div className="w-2 h-2 bg-primary-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div ref={messagesEndRef} />
+            </ScrollArea>
+
+            {/* Input */}
+            <div className="p-4 border-t border-white/5">
+              <div className="flex gap-2">
+                <Input
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder={
+                    userRole === 'student' && isRateLimited 
+                      ? t('uiComponents.chatbot.dailyLimitReached') 
+                      : actionMode 
+                        ? t('uiComponents.chatbot.tryActionMode') 
+                        : t('uiComponents.chatbot.askAiAssistant', { role: userRole })
+                  }
+                  className={`flex-1 bg-white/10 border-white/20 focus:border-primary-400 ${
+                    userRole === 'student' && isRateLimited ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+                  disabled={isLoading || (userRole === 'student' && isRateLimited)}
+                />
+                <Button
+                  onClick={sendMessage}
+                  disabled={!inputValue.trim() || isLoading || (userRole === 'student' && isRateLimited)}
+                  className={`bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-black ${
+                    userRole === 'student' && isRateLimited ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
+              {actionMode && (
+                <p className="text-xs text-primary-400 mt-2 flex items-center gap-1">
+                  <Zap className="h-3 w-3" />
+                  {t('uiComponents.chatbot.actionModeEnabled')}
+                </p>
+              )}
+              {userRole === 'student' && isRateLimited && (
+                <p className="text-xs text-red-400 mt-2 flex items-center gap-1">
+                  <MessageSquare className="h-3 w-3" />
+                  {t('uiComponents.chatbot.dailyMessageLimitReached')}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Confirmation Modal */}
+      <AlertDialog open={showConfirmation} onOpenChange={setShowConfirmation}>
+        <AlertDialogContent className="glass-card border-0">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="gradient-text flex items-center gap-2">
+              <Settings className="h-5 w-5" />
+              {t('uiComponents.chatbot.confirmAction')}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-base">
+              {pendingAction?.description}
+              {pendingAction?.originalMessage && (
+                <div className="mt-2 text-sm text-muted-foreground">
+                  {t('uiComponents.chatbot.basedOn', { message: pendingAction.originalMessage })}
+                </div>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="btn-secondary">{t('uiComponents.chatbot.cancel')}</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={executeAction}
+              className="btn-primary"
+            >
+              {t('uiComponents.chatbot.confirmAndExecute')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+};

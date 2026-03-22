@@ -1,0 +1,391 @@
+
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { useToast } from '@/hooks/use-toast';
+import { History, Search, TrendingUp, TrendingDown, CreditCard, Gift, ShoppingCart, RotateCcw, Calendar, FileText } from 'lucide-react';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store/store';
+import DashboardModernHeader from '@/components/ui/DashboardModernHeader';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem, SelectLabel } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { TransactionCardSkeleton } from '@/components/student/skeletons/TransactionCardSkeleton';
+import { useSecureStudentTransactionsAndWallet } from '@/lib/hooks/secure-student-hooks';
+import { useTranslation } from 'react-i18next';
+import { SEOHead } from '@/components/seo';
+import { StudentInvoices } from '@/components/student/StudentInvoices';
+
+interface Transaction {
+  id: string;
+  amount: number;
+  transaction_type: string;
+  description: string;
+  course_id?: string;
+  created_at: string;
+}
+
+export const StudentTransactions = () => {
+  const { toast } = useToast();
+  const { t } = useTranslation('dashboard');
+  const user = useSelector((state: RootState) => state.auth.user);
+  const { data, isLoading, error } = useSecureStudentTransactionsAndWallet(user);
+  const { transactions = [], wallet = 0 } = data || {};
+  
+  const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterType, setFilterType] = useState<string>('all');
+  const [filterStartDate, setFilterStartDate] = useState<string>('');
+  const [filterEndDate, setFilterEndDate] = useState<string>('');
+  const [sortBy, setSortBy] = useState<string>('date_desc');
+
+  useEffect(() => {
+    if (error) {
+        toast({
+            title: t('studentTransactions.error'),
+            description: t('studentTransactions.failedToLoadTransactions'),
+            variant: 'destructive',
+        });
+    }
+  }, [error, toast]);
+
+  useEffect(() => {
+    let filtered = [...transactions];
+    // Filter by type
+    if (filterType !== 'all') {
+      filtered = filtered.filter(t => t.transaction_type === filterType);
+    }
+    // Filter by date range
+    if (filterStartDate) {
+      filtered = filtered.filter(t => new Date(t.created_at) >= new Date(filterStartDate));
+    }
+    if (filterEndDate) {
+      filtered = filtered.filter(t => new Date(t.created_at) <= new Date(filterEndDate));
+    }
+    // Filter by search term
+    if (searchTerm.trim() !== '') {
+      filtered = filtered.filter(transaction =>
+        transaction.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        transaction.transaction_type.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    // Sort
+    if (sortBy === 'date_desc') {
+      filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    } else if (sortBy === 'date_asc') {
+      filtered.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    } else if (sortBy === 'amount_desc') {
+      filtered.sort((a, b) => b.amount - a.amount);
+    } else if (sortBy === 'amount_asc') {
+      filtered.sort((a, b) => a.amount - b.amount);
+    }
+    setFilteredTransactions(filtered);
+  }, [searchTerm, transactions, filterType, filterStartDate, filterEndDate, sortBy]);
+
+  const getTransactionIcon = (type: string) => {
+    switch (type) {
+      case 'credit':
+        return <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-primary-400" />;
+      case 'debit':
+        return <TrendingDown className="h-4 w-4 sm:h-5 sm:w-5 text-red-400" />;
+      case 'course_purchase':
+        return <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5 text-blue-400" />;
+      case 'code_redemption':
+        return <Gift className="h-4 w-4 sm:h-5 sm:w-5 text-purple-400" />;
+      case 'refund':
+        return <RotateCcw className="h-4 w-4 sm:h-5 sm:w-5 text-orange-400" />;
+      default:
+        return <CreditCard className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />;
+    }
+  };
+
+  const getTransactionTypeLabel = (type: string) => {
+    switch (type) {
+      case 'credit':
+        return t('studentTransactions.credit');
+      case 'debit':
+        return t('studentTransactions.debit');
+      case 'course_purchase':
+        return t('studentTransactions.coursePurchase');
+      case 'chapter_purchase':
+        return t('studentTransactions.chapterPurchase');
+      case 'code_redemption':
+        return t('studentTransactions.codeRedemption');
+      case 'refund':
+        return t('studentTransactions.refund');
+      default:
+        return type;
+    }
+  };
+
+  const getTransactionVariant = (type: string): "default" | "secondary" | "destructive" | "outline" => {
+    switch (type) {
+      case 'credit':
+      case 'code_redemption':
+      case 'refund':
+        return 'default';
+      case 'course_purchase':
+      case 'debit':
+        return 'destructive';
+      default:
+        return 'secondary';
+    }
+  };
+
+  // Calculate wallet statistics
+  const totalCredited = transactions.filter(t => t.amount > 0).reduce((sum, t) => sum + t.amount, 0);
+  const totalDebited = transactions.filter(t => t.amount < 0).reduce((sum, t) => sum + Math.abs(t.amount), 0);
+  const numTransactions = transactions.length;
+  const lastTransactionDate = transactions[0]?.created_at ? new Date(transactions[0].created_at).toLocaleString() : 'N/A';
+
+  return (
+    <>
+      <SEOHead />
+      <DashboardLayout>
+      <DashboardModernHeader
+        title={t('studentTransactions.title')}
+        subtitle={t('studentTransactions.subtitle')}
+      />
+      <div className="w-full  space-y-3 sm:space-y-6">
+        {/* Wallet Balance Card - Full Width */}
+        <div className="w-full">
+          <div className="w-full p-3 sm:p-6 bg-gradient-to-br from-primary-500/30 to-secondary-500/30 rounded-xl sm:rounded-2xl border border-primary-500/40 shadow-lg flex flex-col items-start">
+            <div className="text-2xl sm:text-3xl font-extrabold gradient-text mb-1">{wallet}</div>
+            <div className="text-sm sm:text-base text-primary-400 font-medium mb-3 sm:mb-4">{t('studentTransactions.walletBalance')}</div>
+            {/* Statistics Row */}
+            <div className="grid grid-cols-2 sm:flex sm:flex-row gap-2 sm:gap-4 w-full">
+              <div className="flex-1">
+                <div className="text-xs text-muted-foreground">{t('studentTransactions.totalCredited')}</div>
+                <div className="font-semibold text-sm sm:text-base text-primary-500">+{totalCredited}</div>
+              </div>
+              <div className="flex-1">
+                <div className="text-xs text-muted-foreground">{t('studentTransactions.totalDebited')}</div>
+                <div className="font-semibold text-sm sm:text-base text-red-400">-{totalDebited}</div>
+              </div>
+              <div className="flex-1">
+                <div className="text-xs text-muted-foreground">{t('studentTransactions.totalTransactions')}</div>
+                <div className="font-semibold text-sm sm:text-base">{numTransactions}</div>
+              </div>
+              <div className="flex-1">
+                <div className="text-xs text-muted-foreground">{t('studentTransactions.lastTransaction')}</div>
+                <div className="font-semibold text-xs sm:text-sm">{lastTransactionDate}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Tabbed Content */}
+        <Tabs defaultValue="invoices" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="invoices" className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              {t('studentInvoices.title')}
+            </TabsTrigger>
+            <TabsTrigger value="transactions" className="flex items-center gap-2">
+              <History className="h-4 w-4" />
+              {t('studentTransactions.title')}
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="invoices" className="mt-6">
+            <StudentInvoices userId={user?.id || ''} />
+          </TabsContent>
+          
+          <TabsContent value="transactions" className="mt-6">
+            {/* Search and Filter Section */}
+            <Card className="w-full mb-6">
+              <CardContent className="p-4 sm:p-6 space-y-4">
+                {/* Search Bar */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                  <Input
+                    placeholder={t('studentTransactions.searchTransactions')}
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+
+                {/* Filter Controls */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="type-filter" className="text-sm font-medium">{t('studentTransactions.filterByType')}</Label>
+                    <Select value={filterType} onValueChange={setFilterType}>
+                      <SelectTrigger>
+                        <SelectValue placeholder={t('studentTransactions.allTypes')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">{t('studentTransactions.allTypes')}</SelectItem>
+                        <SelectItem value="credit">{t('studentTransactions.credit')}</SelectItem>
+                        <SelectItem value="debit">{t('studentTransactions.debit')}</SelectItem>
+                        <SelectItem value="course_purchase">{t('studentTransactions.coursePurchase')}</SelectItem>
+                        <SelectItem value="chapter_purchase">{t('studentTransactions.chapterPurchase')}</SelectItem>
+                        <SelectItem value="code_redemption">{t('studentTransactions.codeRedemption')}</SelectItem>
+                        <SelectItem value="refund">{t('studentTransactions.refund')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="start-date" className="text-sm font-medium">{t('studentTransactions.startDate')}</Label>
+                    <Input
+                      id="start-date"
+                      type="date"
+                      value={filterStartDate}
+                      onChange={e => setFilterStartDate(e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="end-date" className="text-sm font-medium">{t('studentTransactions.endDate')}</Label>
+                    <Input
+                      id="end-date"
+                      type="date"
+                      value={filterEndDate}
+                      onChange={e => setFilterEndDate(e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="sort-by" className="text-sm font-medium">{t('studentTransactions.sortBy')}</Label>
+                    <Select value={sortBy} onValueChange={setSortBy}>
+                      <SelectTrigger>
+                        <SelectValue placeholder={t('studentTransactions.sortBy')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="date_desc">{t('studentTransactions.dateDesc')}</SelectItem>
+                        <SelectItem value="date_asc">{t('studentTransactions.dateAsc')}</SelectItem>
+                        <SelectItem value="amount_desc">{t('studentTransactions.amountDesc')}</SelectItem>
+                        <SelectItem value="amount_asc">{t('studentTransactions.amountAsc')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Transactions List or Skeletons */}
+            {isLoading ? (
+              <div className="space-y-2">
+                {[...Array(8)].map((_, i) => (
+                  <TransactionCardSkeleton key={i} />
+                ))}
+              </div>
+            ) : filteredTransactions.length === 0 ? (
+              <Card className="glass-card border-0">
+                <CardContent className="text-center py-8 sm:py-16">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-primary-500/20 to-secondary-500/20 rounded-2xl sm:rounded-3xl flex items-center justify-center mx-auto mb-4 sm:mb-6 animate-glow-pulse">
+                    <History className="h-8 w-8 sm:h-10 sm:w-10 text-primary-400" />
+                  </div>
+                  <h3 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3 gradient-text">{t('studentTransactions.noTransactionsFound')}</h3>
+                  <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6 max-w-md mx-auto px-2">
+                    {t('studentTransactions.tryAdjustingFilters')}
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card className="glass-card border-0 w-full">
+                <CardHeader className="pb-3 sm:pb-6">
+                  <CardTitle className="flex items-center gap-2 sm:gap-3 text-lg sm:text-xl">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-primary-500/20 to-secondary-500/20 rounded-lg sm:rounded-xl flex items-center justify-center">
+                      <History className="h-4 w-4 sm:h-5 sm:w-5 text-primary-400" />
+                    </div>
+                    {t('studentTransactions.allTransactions')}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="px-2 sm:px-6">
+                  <div className="space-y-2 sm:space-y-3 w-full">
+                    {filteredTransactions.map((transaction) => {
+                      // Determine color classes
+                      let borderColor = '';
+                      let bgColor = '';
+                      let amountColor = '';
+                      const badgeVariant = transaction.transaction_type === 'chapter_purchase' ? 'secondary' : getTransactionVariant(transaction.transaction_type);
+                      switch (transaction.transaction_type) {
+                        case 'credit':
+                          borderColor = 'border-l-primary-500';
+                          bgColor = 'bg-primary-500/10 hover:bg-primary-500/20';
+                          amountColor = 'text-primary-500';
+                          break;
+                        case 'debit':
+                          borderColor = 'border-l-red-500';
+                          bgColor = 'bg-red-500/10 hover:bg-red-500/20';
+                          amountColor = 'text-red-500';
+                          break;
+                        case 'course_purchase':
+                          borderColor = 'border-l-blue-500';
+                          bgColor = 'bg-blue-500/10 hover:bg-blue-500/20';
+                          amountColor = 'text-blue-500';
+                          break;
+                        case 'chapter_purchase':
+                          borderColor = 'border-l-secondary-500';
+                          bgColor = 'bg-secondary-500/10 hover:bg-secondary-500/20';
+                          amountColor = 'text-secondary-500';
+                          break;
+                        case 'code_redemption':
+                          borderColor = 'border-l-purple-500';
+                          bgColor = 'bg-purple-500/10 hover:bg-purple-500/20';
+                          amountColor = 'text-purple-500';
+                          break;
+                        case 'refund':
+                          borderColor = 'border-l-orange-500';
+                          bgColor = 'bg-orange-500/10 hover:bg-orange-500/20';
+                          amountColor = 'text-orange-500';
+                          break;
+                        default:
+                          borderColor = 'border-l-gray-500';
+                          bgColor = 'bg-gray-500/10 hover:bg-gray-500/20';
+                          amountColor = 'text-gray-500';
+                      }
+                      return (
+                        <div
+                          key={transaction.id}
+                          className={`flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 rounded-lg sm:rounded-xl border-l-4 sm:border-l-8 ${borderColor} ${bgColor} border-white/10 transition-all duration-200 group w-full`}
+                        >
+                          {/* Icon + Title (row on sm+, col on mobile) */}
+                          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto flex-1 min-w-0">
+                            <div className="w-10 h-10 sm:w-14 sm:h-14 bg-background rounded-lg sm:rounded-xl flex items-center justify-center shadow-sm flex-shrink-0">
+                              {getTransactionIcon(transaction.transaction_type)}
+                            </div>
+                            <div className="flex flex-col min-w-0 flex-1">
+                              <div className="font-semibold text-sm sm:text-base break-words whitespace-normal mb-1 sm:mb-0" title={transaction.description}>{transaction.description}</div>
+                              <div className="flex items-center gap-2 sm:gap-3 mt-1 flex-wrap">
+                                <Badge variant={badgeVariant} className={`text-xs ${transaction.transaction_type === 'chapter_purchase' ? 'bg-secondary-500 text-white' : ''}`}>
+                                  {getTransactionTypeLabel(transaction.transaction_type)}
+                                </Badge>
+                                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                  <Calendar className="w-3 h-3" />
+                                  <span className="truncate max-w-[100px] sm:max-w-[120px] lg:max-w-none">{new Date(transaction.created_at).toLocaleString()}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          {/* Amount */}
+                          <div className={`text-xl sm:text-2xl font-extrabold ml-0 sm:ml-4 mt-2 sm:mt-0 ${amountColor} flex-shrink-0`}>
+                            {transaction.amount > 0 ? '+' : ''}{transaction.amount}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {searchTerm && filteredTransactions.length > 0 && (
+              <div className="text-center">
+                <p className="text-sm sm:text-base text-muted-foreground">
+                  {t('studentTransactions.foundTransactions', { count: filteredTransactions.length, searchTerm })}
+                </p>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+      </div>
+      </DashboardLayout>
+    </>
+  );
+};

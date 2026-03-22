@@ -1,0 +1,231 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
+import { BookOpen, Search, Star, Users, Clock, CheckCircle, Sparkles } from 'lucide-react';
+import { useRandomBackground } from "../../hooks/useRandomBackground";
+import { useTenant } from '@/contexts/TenantContext';
+import WavesHeroHeader from '@/components/ui/WavesHeroHeader';
+import ChapterCard from '@/components/chapters/ChapterCard';
+import { ChapterCardSkeleton } from '@/components/student/skeletons/ChapterCardSkeleton';
+import { useTranslation } from 'react-i18next';
+import { SEOHead } from '@/components/seo';
+
+interface Chapter {
+  id: string;
+  title: string;
+  description: string;
+  status: string;
+  price: number;
+  is_enrolled: boolean;
+  cover_image_url?: string;
+  instructor_id?: string;
+  instructor_name?: string;
+  instructor_avatar?: string;
+}
+
+export const ChaptersPage = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const { t } = useTranslation('dashboard');
+  const [chapters, setChapters] = useState<Chapter[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true);
+  const bgClass = useRandomBackground();
+  const { teacher } = useTenant();
+
+  useEffect(() => {
+    fetchChapters();
+  }, []);
+
+  const fetchChapters = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      // Get published chapters with instructor info
+      let chaptersQuery = supabase
+        .from('chapters')
+        .select(`
+          *,
+          profiles!chapters_instructor_id_fkey(full_name, avatar_url)
+        `)
+        .eq('status', 'published');
+      if (teacher) {
+        chaptersQuery = chaptersQuery.eq('instructor_id', teacher.user_id);
+      }
+      const { data: chaptersData, error: chaptersError } = await chaptersQuery;
+      if (chaptersError) throw chaptersError;
+      
+      // Get user's chapter enrollments
+      let enrolledChapterIds: string[] = [];
+      if (user) {
+        const { data: enrollments, error: enrollmentError } = await supabase
+          .from('chapter_enrollments')
+          .select('chapter_id')
+          .eq('student_id', user.id);
+        if (enrollmentError) throw enrollmentError;
+        enrolledChapterIds = enrollments?.map((e) => e.chapter_id) || [];
+      }
+      
+      // Process chapters with teacher info
+      const chaptersWithDetails = await Promise.all(
+        (chaptersData || []).map(async (chapter) => {
+          // Get teacher info from teachers table if available
+          let instructorName = chapter.profiles?.full_name;
+          let instructorAvatar = chapter.profiles?.avatar_url;
+          
+          if (chapter.instructor_id) {
+            const { data: teacherData } = await supabase
+              .from('teachers')
+              .select('display_name, profile_image_url')
+              .eq('user_id', chapter.instructor_id)
+              .eq('is_active', true)
+              .single();
+            
+            if (teacherData) {
+              instructorName = teacherData.display_name || instructorName;
+              instructorAvatar = teacherData.profile_image_url || instructorAvatar;
+            }
+          }
+          
+          return {
+            ...chapter,
+            is_enrolled: enrolledChapterIds.includes(chapter.id),
+            instructor_name: instructorName,
+            instructor_avatar: instructorAvatar
+          };
+        })
+      );
+      setChapters(chaptersWithDetails);
+    } catch (error: unknown) {
+      const err = error as Error;
+      console.error('Error fetching chapters:', err);
+      toast({
+        title: t('chapters.error'),
+        description: t('chapters.failedToLoadChapters'),
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const enrollInChapter = async (chapterId: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const result = await supabase.rpc('enroll_chapter_with_payment', {
+        p_chapter_id: chapterId
+      });
+
+      if (result.error) throw result.error;
+
+      const response = result.data as unknown;
+      if (
+        response &&
+        typeof response === 'object' &&
+        'success' in response &&
+        (response as { success: boolean }).success
+      ) {
+        toast({
+          title: 'Success',
+          description: (response as { message?: string }).message,
+        });
+        fetchChapters();
+      } else {
+        toast({
+          title: 'Error',
+          description: (response && typeof response === 'object' && 'error' in response) ? (response as { error?: string }).error : 'Failed to enroll',
+          variant: 'destructive',
+        });
+      }
+    } catch (error: unknown) {
+      const err = error as Error;
+      console.error('Error enrolling in chapter:', err);
+      toast({
+        title: 'Error',
+        description: err.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const filteredChapters = chapters.filter((chapter) => {
+    const matchesSearch = chapter.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (chapter.description || '').toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesSearch;
+  });
+
+  return (
+    <>
+      <SEOHead />
+      <div className={bgClass + " min-h-screen bg-gradient-to-br from-background via-background to-primary/5 "}>
+        {/* Modern Premium Header - full width */}
+        <WavesHeroHeader
+        title={<span className='text-primary dark:text-white'>{t('chapters.title')}</span>}
+        description={t('chapters.subtitle')}
+      />
+      <div className="container mx-auto px-2 sm:px-4 space-y-8">
+        {/* Search */}
+        <Card className="glass-card w-full max-w-full -mt-12">
+          <CardContent className="p-4 sm:p-6">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder={t('chapters.searchPlaceholder')}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 glass"
+              />
+            </div>
+          </CardContent>
+        </Card>
+        {/* Chapters Grid or Skeletons */}
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-full">
+            {[...Array(6)].map((_, i) => (
+              <ChapterCardSkeleton key={i} />
+            ))}
+          </div>
+        ) : (
+          <div className="w-full overflow-x-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-full">
+              {filteredChapters.map((chapter) => (
+                <ChapterCard
+                  key={chapter.id}
+                  id={chapter.id}
+                  title={chapter.title}
+                  description={chapter.description}
+                  price={chapter.price}
+                  isEnrolled={chapter.is_enrolled}
+                  coverImageUrl={chapter.cover_image_url}
+                  instructorName={chapter.instructor_name}
+                  instructorAvatar={chapter.instructor_avatar}
+                  onPreview={() => navigate(`/chapters/${chapter.id}`)}
+                  onEnroll={() => enrollInChapter(chapter.id)}
+                  onContinue={() => navigate(`/chapters/${chapter.id}`)}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+        {filteredChapters.length === 0 && (
+          <Card className="glass-card w-full max-w-full">
+            <CardContent className="text-center py-12">
+              <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-xl font-semibold mb-2">{t('chapters.noChaptersFound')}</h3>
+              <p className="text-muted-foreground">
+                {t('chapters.tryAdjustingSearchCriteria')}
+              </p>
+            </CardContent>
+          </Card>
+        )}
+        </div>
+      </div>
+    </>
+  );
+};
