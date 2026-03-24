@@ -392,8 +392,6 @@ the express written permission of the copyright holders.
 
 **Made with ❤️ for India's next generation of learners and professionals**
 
-[![GitHub](https://img.shields.io/badge/GitHub-VighneshBhati%2FWisora-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/VighneshBhati/Wisora)
-
 [⬆ Back to Top](#-wisora--indias-expert-guidance-platform)
 
 </div>
