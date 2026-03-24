@@ -6,9 +6,9 @@ import { useInView } from 'react-intersection-observer';
 import { useTranslation } from 'react-i18next';
 
 // Lazy load images for better performance
-const feature_1 = '/pola/feature-1.png';
-const feature_2 = '/pola/feature-2.png';
-const feature_3 = '/pola/feature-3.png';
+const feature_1 = '/assests/logo.png';
+const feature_2 = '/assests/logo.png';
+const feature_3 = '/assests/logo.png';
 
 // Features will be moved inside component to use translations
 

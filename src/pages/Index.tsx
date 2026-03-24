@@ -6,7 +6,6 @@ import { useTenant } from '@/contexts/TenantContext';
 import TeacherLanding from './TeacherLanding';
 import { SEOHead } from '@/components/seo/SEOHead';
 import SaasLanding from '@/components/landing/SaasLanding';
-import { ChemistryLanding } from './ChemistryLanding';
 
 const Index = () => {
   const bgClass = useRandomBackground();
@@ -14,16 +13,6 @@ const Index = () => {
 
   // If we have a teacher, show their landing page
   if (teacher) {
-    
-    if (teacher.slug === 'pola') {
-      return (
-        <>
-          <SEOHead />
-          <ChemistryLanding />
-        </>
-      );
-    }
-
     return (
       <>
         <SEOHead />

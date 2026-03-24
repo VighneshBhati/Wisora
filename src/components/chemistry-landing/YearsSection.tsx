@@ -8,10 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { ArrowRight } from 'lucide-react';
 
 // Lazy load images for better performance
-// const year1Image = '/pola/year1-chemistry.png';
-// const year2Image = '/pola/year2-chemistry.png';
-// const year3Image = '/pola/year3-chemistry.png';
-const teacherImage = '/pola/year1-chemistry.png';
+const teacherImage = '/assests/logo.png';
 
 // Year data will be moved inside component to use translations
 

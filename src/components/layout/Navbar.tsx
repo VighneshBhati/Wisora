@@ -92,8 +92,7 @@ export const Navbar = ({ extraXSpacing = false }: { extraXSpacing?: boolean }) =
         window.requestAnimationFrame(() => {
           const currentScrollY = window.scrollY;
           // Home page with tenant: hide until scrolled past hero, then use scroll direction logic
-          // Exception: show navbar immediately for 'pola' slug
-          if (location.pathname === '/' && teacher && isLargeScreen && slug !== 'pola') {
+          if (location.pathname === '/' && teacher && isLargeScreen) {
             if (currentScrollY < window.innerHeight) {
               setHidden(true);
             } else {

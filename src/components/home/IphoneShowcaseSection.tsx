@@ -12,7 +12,7 @@ interface IphoneShowcaseSectionProps {
 export const IphoneShowcaseSection: React.FC<IphoneShowcaseSectionProps> = ({
   leftTextTop = "Powerful",
   leftTextBottom = "Account.",
-  imageUrl = "/lrnflix-iphone.jpg",
+  imageUrl = "/assests/logo.png",
   imagePosition = "right",
 }) => {
   const controls = useAnimation();

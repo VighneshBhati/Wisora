@@ -157,8 +157,8 @@ export const Home = () => {
 
 
       {/* iPhone Showcase Section */}
-      <IphoneShowcaseSection imageUrl = "/telda-iphone.png" imagePosition = "right"/>
-      <IphoneShowcaseSection imageUrl = "/telda-card.png" imagePosition = "left"/>
+      <IphoneShowcaseSection imageUrl="/assests/logo.png" imagePosition="right"/>
+      <IphoneShowcaseSection imageUrl="/assests/logo.png" imagePosition="left"/>
 
       {/* Modern Hyperspeed Card Section */}
       <HyperspeedCardSection

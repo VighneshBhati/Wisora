@@ -12,7 +12,7 @@ import { useTenant } from '@/contexts/TenantContext';
 import type { RootState } from '@/store/store';
 
 // Lazy load the teacher image
-const about_techer = '/pola/about-teacher.png';
+const about_techer = '/assests/logo.png';
 
 // Stats will be moved inside component to use translations
 
