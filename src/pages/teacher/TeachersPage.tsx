@@ -287,10 +287,10 @@ export const TeachersPage = () => {
                     {/* Bio */}
                     <p className="text-xs text-white/50 line-clamp-3 leading-relaxed">{teacher.bio}</p>
                     {/* CTA */}
-                    <div className="w-full mt-1 py-1.5 rounded-md text-center text-xs font-semibold text-white/80"
+                    <Link to={`/teachers/${teacher.slug}`} className="w-full mt-1 py-1.5 rounded-md text-center text-xs font-semibold text-white/80 block"
                       style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>
                       View Profile
-                    </div>
+                    </Link>
                   </div>
                 </GlowBorderCard>
               ) : (

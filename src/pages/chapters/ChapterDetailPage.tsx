@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { auth } from "@/integrations/firebase/client";
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -91,8 +92,8 @@ export const ChapterDetailPage = () => {
 
   useEffect(() => {
     async function fetchUser() {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUserId(user?.id);
+      const user = auth.currentUser;
+      setUserId(user?.uid);
     }
     fetchUser();
   }, []);
@@ -106,12 +107,12 @@ export const ChapterDetailPage = () => {
 
   const fetchUserWallet = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       if (user) {
         const { data: profile } = await supabase
           .from('profiles')
           .select('wallet')
-          .eq('id', user.id)
+          .eq('id', user.uid)
           .single();
         
         if (profile) {
@@ -139,13 +140,13 @@ export const ChapterDetailPage = () => {
       setChapter(chapterData);
 
       // Check enrollment
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       if (user) {
         const { data: enrollment } = await supabase
           .from('chapter_enrollments')
           .select('*')
           .eq('chapter_id', id)
-          .eq('student_id', user.id)
+          .eq('student_id', user.uid)
           .maybeSingle();
 
         setIsEnrolled(!!enrollment);
@@ -154,7 +155,7 @@ export const ChapterDetailPage = () => {
         if (enrollment) {
           try {
             const { syncChapterCourseEnrollments } = await import('@/utils/enrollmentUtils');
-            const syncResult = await syncChapterCourseEnrollments(user.id, id);
+            const syncResult = await syncChapterCourseEnrollments(user.uid, id);
             if (syncResult.success) {
               console.log('Course enrollments synced:', syncResult.message);
             } else {
@@ -211,7 +212,7 @@ export const ChapterDetailPage = () => {
 
   const handlePurchaseChapter = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       if (!user) {
         setShowAuthModal(true);
         return;

@@ -87,7 +87,7 @@ export const ObjectSharingModal = ({ isOpen, onClose, groupId, onObjectShared }:
       const { data: coursesData, error: coursesError } = await supabase
         .from('courses')
         .select('id, title, description')
-        .eq('instructor_id', user.id)
+        .eq('instructor_id', user.uid)
         .eq('status', 'published');
 
       if (coursesError) throw coursesError;
@@ -172,7 +172,7 @@ export const ObjectSharingModal = ({ isOpen, onClose, groupId, onObjectShared }:
 
     setLoading(true);
     try {
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      const currentUser = auth.currentUser;
       if (!currentUser) throw new Error('User not authenticated');
 
       let processedObjectData: any = {};

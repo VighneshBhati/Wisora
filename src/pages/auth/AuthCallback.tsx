@@ -1,64 +1,33 @@
-
 import React, { useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import type { RootState } from '@/store/store';
 import { SEOHead } from '@/components/seo';
-import { getIntendedDestination } from '@/utils/authRedirect';
 
+// Firebase uses popup-based OAuth so this callback page is mostly a fallback.
+// It just waits for AuthContext to initialize and redirects accordingly.
 export const AuthCallback = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const { isAuthenticated, user, isLoading } = useSelector((state: RootState) => state.auth);
 
   useEffect(() => {
-    const handleAuthCallback = async () => {
-      try {
-        const { data, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('Auth callback error:', error);
-          navigate('/auth/login');
-          return;
-        }
-
-        if (data.session?.user) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', data.session.user.id)
-            .maybeSingle();
-
-          const nextParam = searchParams.get('next');
-          const user = {
-            id: data.session.user.id,
-            email: data.session.user.email || '',
-            full_name: data.session.user.user_metadata?.full_name || null,
-            role: (profile?.role || data.session.user.user_metadata?.role || 'student') as 'student' | 'teacher' | 'admin',
-            avatar_url: null,
-            wallet: 0,
-            minutes: 0,
-            daily_free_minutes_used: 0,
-            last_free_minutes_reset: null,
-          };
-
-          const redirectPath = getIntendedDestination(nextParam, user);
-          navigate(redirectPath);
-        } else {
-          navigate('/auth/login');
-        }
-      } catch (error) {
-        console.error('Error in auth callback:', error);
-        navigate('/auth/login');
+    if (!isLoading) {
+      if (isAuthenticated && user) {
+        const path = user.role === 'teacher' ? '/teacher/dashboard'
+          : user.role === 'admin' ? '/admin/dashboard'
+          : '/student/dashboard';
+        navigate(path, { replace: true });
+      } else {
+        navigate('/auth/login', { replace: true });
       }
-    };
-
-    handleAuthCallback();
-  }, [navigate, searchParams]);
+    }
+  }, [isLoading, isAuthenticated, user, navigate]);
 
   return (
     <>
       <SEOHead />
       <div className="min-h-screen flex items-center justify-center bg-black">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white" />
       </div>
     </>
   );

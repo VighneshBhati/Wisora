@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { SEOHead } from '@/components/seo/SEOHead';
+import { useToast } from '@/hooks/use-toast';
 import { Check, Zap, Crown, Star } from 'lucide-react';
 import styled from 'styled-components';
 
@@ -194,10 +195,18 @@ const plans = [
 
 export const PersonalSubscription = () => {
   const [billing, setBilling] = useState<'monthly' | 'annual'>('monthly');
+  const { toast } = useToast();
+
+  const handlePlanClick = (planName: string) => {
+    toast({
+      title: '🚧 Payment Gateway Under Development',
+      description: `${planName} plan subscription will be available soon. We'll notify you when it launches!`,
+    });
+  };
 
   return (
     <>
-      <SEOHead title="Subscription | KIA" />
+      <SEOHead title="Subscription | Wisora" />
       <DashboardLayout>
         <div className="space-y-8">
           <div className="text-center">
@@ -266,7 +275,7 @@ export const PersonalSubscription = () => {
                     ))}
                   </ul>
 
-                  <Button className="w-full bg-primary-500 hover:bg-primary-600 text-white font-semibold">
+                  <Button className="w-full bg-primary-500 hover:bg-primary-600 text-white font-semibold" onClick={() => handlePlanClick(plan.name)}>
                     {plan.cta}
                   </Button>
                 </PlanCard>
@@ -282,7 +291,7 @@ export const PersonalSubscription = () => {
                   <h3 className="font-bold">Current Plan: Free</h3>
                   <p className="text-sm text-muted-foreground">You're on the free tier. Upgrade to unlock more sessions.</p>
                 </div>
-                <Button variant="outline" className="border-primary-500/30 text-primary-400 hover:bg-primary-500/10">
+                <Button variant="outline" className="border-primary-500/30 text-primary-400 hover:bg-primary-500/10" onClick={() => handlePlanClick('Renew / Upgrade')}>
                   Renew / Upgrade
                 </Button>
               </div>
@@ -293,3 +302,4 @@ export const PersonalSubscription = () => {
     </>
   );
 };
+

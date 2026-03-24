@@ -11,6 +11,8 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { supabase } from '@/integrations/supabase/client';
+import { auth } from '@/integrations/firebase/client';
+import { signOut } from 'firebase/auth';
 import type { RootState } from '@/store/store';
 import { PLATFORM_NAME } from '@/data/constants';
 import { FaBars } from 'react-icons/fa';
@@ -49,7 +51,7 @@ const Header: React.FC = () => {
   }, []);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    await signOut(auth);
     navigate('/');
     setIsMobileNavOpen(false);
   };

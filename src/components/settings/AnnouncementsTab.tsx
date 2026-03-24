@@ -82,14 +82,14 @@ export const AnnouncementsTab = () => {
 
   const fetchStudents = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       if (!user) return;
 
       // First get the course IDs for this teacher
       const { data: courseData, error: courseError } = await supabase
         .from('courses')
         .select('id')
-        .eq('instructor_id', user.id);
+        .eq('instructor_id', user.uid);
 
       if (courseError) throw courseError;
 

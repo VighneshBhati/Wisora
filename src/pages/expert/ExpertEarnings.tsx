@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -39,15 +39,15 @@ export const ExpertEarnings = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'kia-earnings-statement.csv';
+    a.download = 'wisora-earnings-statement.csv';
     a.click();
     URL.revokeObjectURL(url);
-    toast({ title: 'Statement Downloaded', description: 'Saved as kia-earnings-statement.csv' });
+    toast({ title: 'Statement Downloaded', description: 'Saved as wisora-earnings-statement.csv' });
   };
 
   return (
     <>
-      <SEOHead title="Earnings | KIA Expert" />
+      <SEOHead title="Earnings | Wisora Expert" />
       <DashboardLayout>
         <div className="space-y-8">
           <div className="flex items-center justify-between">
@@ -146,3 +146,4 @@ export const ExpertEarnings = () => {
     </>
   );
 };
+

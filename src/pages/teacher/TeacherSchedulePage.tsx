@@ -124,7 +124,7 @@ export default function TeacherSchedulePage() {
   const { data: courses } = useQuery({
     queryKey: ['teacher-courses-select'],
     queryFn: async () => {
-      const { data: user } = await supabase.auth.getUser();
+      const _fbUser = auth.currentUser; const user = { user: _fbUser ? { id: _fbUser.uid, email: _fbUser.email } : null };
       if (!user.user) throw new Error('Not authenticated');
 
       const { data, error } = await supabase
@@ -197,7 +197,7 @@ Consider this is for a teacher managing educational tasks. Make it professional,
   // Create task mutation
   const createTaskMutation = useMutation({
     mutationFn: async (taskData: Partial<Task>) => {
-      const { data: user } = await supabase.auth.getUser();
+      const _fbUser = auth.currentUser; const user = { user: _fbUser ? { id: _fbUser.uid, email: _fbUser.email } : null };
       if (!user.user) throw new Error('Not authenticated');
 
       const { data, error } = await supabase

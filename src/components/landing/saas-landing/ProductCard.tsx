@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+﻿import React, { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 
 // Product Card Component
@@ -73,7 +73,7 @@ const ProductCard: React.FC = () => {
 
         <div className="text-center text-lg mb-8 md:text-xl text-black">
           From 1:1 sessions to campus visits, from individual bookings to institutional credits — 
-          KIA covers every use case with a clean, powerful platform.
+          Wisora covers every use case with a clean, powerful platform.
         </div>
       </div>
 
@@ -133,3 +133,4 @@ const ProductCard: React.FC = () => {
 };
 
 export default ProductCard;
+

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { auth } from "@/integrations/firebase/client";
 import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -51,13 +52,13 @@ export const CreateChapterModal = ({ isOpen, onClose, onChapterCreated }: Create
     setLoading(true);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       if (!user) throw new Error('Not authenticated');
 
       const { error } = await supabase
         .from('chapters')
         .insert({
-          instructor_id: user.id,
+          instructor_id: user.uid,
           title: formData.title,
           description: formData.description,
           price: formData.price,

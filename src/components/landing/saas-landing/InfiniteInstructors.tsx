@@ -15,24 +15,6 @@ const InfiniteInstructors: React.FC = () => {
 
   const fallbackItems = [
     {
-      image: '/assests/vidhi-jain.jpeg',
-      link: '/teachers',
-      title: 'Ms. Vidhi Jain',
-      description: 'Skilled Artist'
-    },
-    {
-      image: '/assests/vikas-balara.jpeg',
-      link: '/teachers',
-      title: 'Mr. Vikas Balara',
-      description: 'Renaissance Person'
-    },
-    {
-      image: '/assests/suhani-joshi.jpeg',
-      link: '/teachers',
-      title: 'Ms. Suhani Joshi',
-      description: 'Master in Kathak'
-    },
-    {
       image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80',
       link: '/teachers',
       title: 'Arjun Kapoor',

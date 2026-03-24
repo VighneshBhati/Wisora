@@ -1,4 +1,5 @@
 import React, { useState, useEffect, Suspense } from 'react';
+import { auth } from "@/integrations/firebase/client";
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -83,7 +84,7 @@ export const TeacherGroups = () => {
     try {
       console.log('Creating new group:', newGroup);
 
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
               if (!user) {
           toast({
             title: t('common.error'),
@@ -98,7 +99,7 @@ export const TeacherGroups = () => {
         .insert({
           name: newGroup.name.trim(),
           description: newGroup.description.trim() || null,
-          created_by: user.id,
+          created_by: user.uid,
           is_public: newGroup.is_public,
           max_members: newGroup.max_members ? parseInt(newGroup.max_members) : null,
           group_code: 'TEMP', // This will be replaced by the trigger

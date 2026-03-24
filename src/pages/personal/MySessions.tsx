@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent } from '@/components/ui/card';
@@ -84,7 +84,7 @@ export const MySessions = () => {
 
   return (
     <>
-      <SEOHead title="My Sessions | KIA" />
+      <SEOHead title="My Sessions | Wisora" />
       <DashboardLayout>
         <div className="space-y-6">
           <div>
@@ -229,3 +229,4 @@ export const MySessions = () => {
     </>
   );
 };
+

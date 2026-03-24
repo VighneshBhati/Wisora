@@ -132,7 +132,7 @@ const SaasHero: React.FC = () => {
         <div className="flex flex-col items-center justify-center gap-8 md:gap-16 w-full max-w-7xl mx-auto text-center">
           <div className="w-full max-w-[600px]">
             <div className="text-white border-2 w-fit py-0.5 px-1.5 lg:text-lg rounded-sm border-white/60 mx-auto bg-black/20 backdrop-blur-sm">
-              Know It All
+              Wisora
             </div>
             <div className="text-5xl md:text-7xl font-black my-7 text-white tracking-tighter drop-shadow-2xl" style={{ textShadow: '0 0 20px rgba(0,0,0,0.8), 0 0 40px rgba(0,0,0,0.6)' }}>
               Talk to Real Experience

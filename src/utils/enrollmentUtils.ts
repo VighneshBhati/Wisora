@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { auth } from "@/integrations/firebase/client";
 import { EnrollmentResult, EnrollmentSource } from '@/types/enrollment';
 
 /**
@@ -570,7 +571,7 @@ export const enrollInCourseWithValidation = async (
   try {
     console.log('enrollInCourseWithValidation called with:', { courseId, source, discountCode });
 
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = auth.currentUser;
     if (!user) {
       return {
         success: false,
@@ -599,7 +600,7 @@ export const enrollInCourseWithValidation = async (
     const { data: existingEnrollment } = await supabase
       .from('enrollments')
       .select('id')
-      .eq('student_id', user.id)
+      .eq('student_id', user.uid)
       .eq('course_id', courseId)
       .single();
 
@@ -614,15 +615,15 @@ export const enrollInCourseWithValidation = async (
     // Handle different enrollment sources
     switch (source) {
       case 'wallet':
-        return await enrollWithWalletPayment(courseId, course, user.id, discountCode);
+        return await enrollWithWalletPayment(courseId, course, user.uid, discountCode);
       
       case 'enrollment_code':
-        return await enrollWithCode(courseId, course, user.id);
+        return await enrollWithCode(courseId, course, user.uid);
       
       case 'direct':
         // For free courses (price = 0)
         if (course.price === 0) {
-          return await enrollDirectly(courseId, course, user.id);
+          return await enrollDirectly(courseId, course, user.uid);
         } else {
           return {
             success: false,
@@ -658,7 +659,7 @@ export const enrollInChapterWithValidation = async (
   try {
     console.log('enrollInChapterWithValidation called with:', { chapterId, source });
 
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = auth.currentUser;
     if (!user) {
       return {
         success: false,
@@ -687,7 +688,7 @@ export const enrollInChapterWithValidation = async (
     const { data: existingEnrollment } = await supabase
       .from('chapter_enrollments')
       .select('id')
-      .eq('student_id', user.id)
+      .eq('student_id', user.uid)
       .eq('chapter_id', chapterId)
       .single();
 
@@ -702,12 +703,12 @@ export const enrollInChapterWithValidation = async (
     // Handle different enrollment sources
     switch (source) {
       case 'wallet':
-        return await enrollChapterWithWalletPayment(chapterId, chapter, user.id);
+        return await enrollChapterWithWalletPayment(chapterId, chapter, user.uid);
       
       case 'direct':
         // For free chapters (price = 0)
         if (chapter.price === 0) {
-          return await enrollChapterDirectly(chapterId, chapter, user.id);
+          return await enrollChapterDirectly(chapterId, chapter, user.uid);
         } else {
           return {
             success: false,

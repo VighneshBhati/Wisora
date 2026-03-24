@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { auth } from "@/integrations/firebase/client";
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -81,13 +82,13 @@ export const QuizTaker = () => {
 
   const checkEnrollment = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       if (user) {
         const { data: enrollment } = await supabase
           .from('enrollments')
           .select('*')
           .eq('course_id', courseId)
-          .eq('student_id', user.id)
+          .eq('student_id', user.uid)
           .maybeSingle();
 
         setIsEnrolled(!!enrollment);
@@ -128,13 +129,13 @@ export const QuizTaker = () => {
       setQuestions(processedQuestions);
 
       // Fetch user's attempts
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       if (user) {
         const { data: attemptsData, error: attemptsError } = await supabase
           .from('quiz_attempts')
           .select('*')
           .eq('quiz_id', quizId)
-          .eq('student_id', user.id)
+          .eq('student_id', user.uid)
           .order('started_at', { ascending: false });
 
         if (attemptsError) throw attemptsError;
@@ -154,14 +155,14 @@ export const QuizTaker = () => {
 
   const startAttempt = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       if (!user) throw new Error('User not authenticated');
 
       const { data, error } = await supabase
         .from('quiz_attempts')
         .insert({
           quiz_id: quizId,
-          student_id: user.id,
+          student_id: user.uid,
           answers: {},
           max_score: questions.reduce((sum, q) => sum + q.points, 0)
         })

@@ -26,7 +26,7 @@ export const CreateCourse = () => {
     setLoading(true);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       
       if (!user) {
         throw new Error('You must be logged in to create a course');
@@ -42,7 +42,7 @@ export const CreateCourse = () => {
           category: formData.category,
           price: formData.price,
           status: formData.status,
-          instructor_id: user.id,
+          instructor_id: user.uid,
           enrollment_code: enrollmentCode
         })
         .select()

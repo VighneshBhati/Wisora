@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { SEOHead } from '@/components/seo/SEOHead';
 import { Navbar } from '@/components/layout/Navbar';
 import styled, { keyframes } from 'styled-components';
@@ -426,7 +426,7 @@ export const ContactPage = () => {
 
   return (
     <>
-      <SEOHead title="Contact | KIA — Know It All" />
+      <SEOHead title="Contact | Wisora" />
       <div className="min-h-screen bg-[#090a0f] text-white">
         <Navbar extraXSpacing />
 
@@ -476,7 +476,7 @@ export const ContactPage = () => {
                 <div className="form">
                   <div className="form_front">
                     <div className="form_title">Say Hello 👋</div>
-                    <div className="form_sub">vighnesh@kia.in</div>
+                    <div className="form_sub">arsh@wisora.in</div>
                     <input className="inp" placeholder="Your name" type="text" />
                     <input className="inp" placeholder="Your email" type="email" />
                     <textarea className="inp" placeholder="Your message..." />
@@ -488,7 +488,7 @@ export const ContactPage = () => {
                     </span>
                   </div>
                   <div className="form_back">
-                    <div className="form_title">Partner with KIA</div>
+                    <div className="form_title">Partner with Wisora</div>
                     <div className="form_sub">For colleges & enterprises</div>
                     <input className="inp" placeholder="Organisation name" type="text" />
                     <input className="inp" placeholder="Your name" type="text" />
@@ -510,7 +510,7 @@ export const ContactPage = () => {
                 <SocialCard>
                   <div className="background" />
                   <div className="logo">
-                    <span className="logo-text">KIA</span>
+                    <span className="logo-text">Wisora</span>
                   </div>
                   {/* Instagram */}
                   <div className="box box1">
@@ -546,7 +546,7 @@ export const ContactPage = () => {
                   <div className="inner">
                     <div className="text-2xl mb-2">📧</div>
                     <div className="text-xs font-bold text-white mb-1">Email</div>
-                    <div className="text-xs text-white/50">vighnesh@kia.in</div>
+                    <div className="text-xs text-white/50">arsh@wisora.in</div>
                   </div>
                 </InfoCard>
                 <InfoCard>
@@ -578,3 +578,4 @@ export const ContactPage = () => {
     </>
   );
 };
+

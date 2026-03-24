@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import type { RootState } from '@/store/store';
 import { useRandomBackground } from "../../hooks/useRandomBackground";
 import { PremiumCourseCard } from '@/components/courses/PremiumCourseCard';
 import { SEOHead } from '@/components/seo';
@@ -8,6 +10,7 @@ import PoliciesModal from '@/components/landing/PoliciesModal';
 import { useTenant } from '@/contexts/TenantContext';
 import { supabase } from '@/integrations/supabase/client';
 import { AuthLeftSide } from '@/components/auth/AuthLeftSide';
+import { getDefaultRedirectPath } from '@/utils/authRedirect';
 
 // Fallback dummy data when no real sessions are available
 const fallbackCards = [
@@ -107,6 +110,8 @@ function useVerticalCarousel(cards: ProcessedCourse[], direction = 'down', speed
 
 const Auth: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, isAuthenticated, isLoading } = useSelector((state: RootState) => state.auth);
   const [mode, setMode] = useState<'login' | 'signup' | 'buttons'>('buttons');
   const [showLegalModal, setShowLegalModal] = useState(false);
   const [activeTab, setActiveTab] = useState('terms');
@@ -114,6 +119,13 @@ const Auth: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const bgClass = useRandomBackground();
   const { teacher } = useTenant();
+
+  // If already authenticated, redirect away from auth pages
+  useEffect(() => {
+    if (!isLoading && isAuthenticated && user) {
+      navigate(getDefaultRedirectPath(user), { replace: true });
+    }
+  }, [isAuthenticated, isLoading, user, navigate]);
 
   // Fetch courses based on tenant status
   const fetchCourses = useCallback(async () => {

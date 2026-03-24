@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import {
@@ -275,7 +275,7 @@ const PremiumFooter: React.FC = () => {
                 </div>
                 <div>
                   <a 
-                    href="https://kia.in" 
+                    href="https://wisora.in" 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="hover:opacity-80 transition-opacity"
@@ -454,3 +454,4 @@ const PremiumFooter: React.FC = () => {
  };
 
 export default PremiumFooter;
+

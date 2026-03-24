@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { SEOHead } from '@/components/seo/SEOHead';
 import { Send, Paperclip, Search } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 const conversations = [
   { id: '1', name: 'Rahul Sharma', domain: 'Product Management', lastMsg: 'See you at 3 PM tomorrow!', time: '2h ago', unread: 2, avatar: '👨‍💼', online: true },
@@ -22,12 +23,13 @@ const messages = [
 ];
 
 export const PersonalMessages = () => {
+  const { toast } = useToast();
   const [selected, setSelected] = useState(conversations[0]);
   const [input, setInput] = useState('');
 
   return (
     <>
-      <SEOHead title="Messages | KIA" />
+      <SEOHead title="Messages | Wisora" />
       <DashboardLayout>
         <div className="space-y-4">
           <h1 className="text-2xl font-black">Messages</h1>
@@ -98,7 +100,8 @@ export const PersonalMessages = () => {
 
                 {/* Input */}
                 <div className="p-4 border-t border-white/10 flex gap-2">
-                  <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-white">
+                  <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-white"
+                    onClick={() => toast({ title: '📎 File Attachment', description: 'File attachment coming soon.' })}>
                     <Paperclip className="h-4 w-4" />
                   </Button>
                   <Input
@@ -120,3 +123,4 @@ export const PersonalMessages = () => {
     </>
   );
 };
+

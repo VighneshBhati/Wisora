@@ -82,14 +82,14 @@ export const QuizTaker = ({ quizId, onComplete }: QuizTakerProps) => {
       })) || [];
 
       // Start attempt
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       if (!user) throw new Error('Not authenticated');
 
       const { data: attempt, error: attemptError } = await supabase
         .from('quiz_attempts')
         .insert({
           quiz_id: quizId,
-          student_id: user.id
+          student_id: user.uid
         })
         .select()
         .single();

@@ -1,152 +1,140 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
+import { onAuthStateChanged } from 'firebase/auth';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { auth, db } from '@/integrations/firebase/client';
 import { supabase } from '@/integrations/supabase/client';
 import { setUser, setLoading } from '@/store/slices/authSlice';
 import type { User } from '@/store/slices/authSlice';
 import SparkLoader from '@/components/ui/SparkLoader';
 
-const AuthContext = createContext({});
+const AuthContext = createContext<{ user: User | null }>({ user: null });
+export const useAuth = () => useContext(AuthContext);
 
-export const useAuth = () => {
-  return useContext(AuthContext);
-};
+// Race a promise against a timeout
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T | null> {
+  return Promise.race([
+    promise,
+    new Promise<null>((resolve) => setTimeout(() => resolve(null), ms)),
+  ]);
+}
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const dispatch = useDispatch();
   const [isInitialized, setIsInitialized] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   useEffect(() => {
-    let mounted = true;
+    // Safety net — unblock the app after 1.5s max
+    const safetyTimer = setTimeout(() => {
+      dispatch(setLoading(false));
+      setIsInitialized(true);
+    }, 1500);
 
-    const initializeAuth = async () => {
-      try {
-        console.log('Initializing auth...');
-        
-        // Get current session
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('Error getting session:', error);
-          if (mounted) {
-            dispatch(setUser(null));
-            dispatch(setLoading(false));
-            setIsInitialized(true);
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      clearTimeout(safetyTimer);
+
+      if (firebaseUser) {
+        // ── Step 1: Unblock the app immediately with Firebase data ──────────
+        // Don't wait for Firestore — let the user through right away
+        const immediateUser: User = {
+          id: firebaseUser.uid,
+          email: firebaseUser.email || '',
+          full_name: firebaseUser.displayName || null,
+          role: 'student',
+          avatar_url: firebaseUser.photoURL || null,
+          wallet: 0,
+          minutes: 0,
+          daily_free_minutes_used: 0,
+          last_free_minutes_reset: null,
+        };
+        dispatch(setUser(immediateUser));
+        setCurrentUser(immediateUser);
+        dispatch(setLoading(false));
+        setIsInitialized(true);
+
+        // ── Step 2: Fetch full profile in background (non-blocking) ─────────
+        try {
+          let profileData: Partial<User> = {};
+
+          // Try Firestore (1.5s timeout)
+          try {
+            const profileRef = doc(db, 'profiles', firebaseUser.uid);
+            const snap = await withTimeout(getDoc(profileRef), 1500);
+            if (snap && snap.exists()) {
+              profileData = snap.data() as Partial<User>;
+            }
+          } catch (_) {}
+
+          // Fallback to Supabase if no role found (1.5s timeout)
+          if (!profileData.role) {
+            try {
+              const result = await withTimeout(
+                supabase.from('profiles').select('*').eq('id', firebaseUser.uid).maybeSingle(),
+                1500
+              );
+              if (result?.data) profileData = result.data;
+            } catch (_) {}
           }
-          return;
-        }
 
-        if (session?.user && mounted) {
-          console.log('Session found, setting user:', session.user.id);
-          
-          // Try to get profile data with wallet and minutes
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .maybeSingle();
-
-          if (profileError) {
-            console.error('Error fetching profile:', profileError);
+          // Create profile if still missing
+          if (!profileData.role) {
+            const newProfile = {
+              id: firebaseUser.uid,
+              email: firebaseUser.email || '',
+              full_name: firebaseUser.displayName || null,
+              role: 'student' as const,
+              avatar_url: firebaseUser.photoURL || null,
+              wallet: 0, minutes: 0,
+              daily_free_minutes_used: 0,
+              last_free_minutes_reset: null,
+            };
+            withTimeout(setDoc(doc(db, 'profiles', firebaseUser.uid), newProfile), 2000)
+              .catch(() => {});
+            profileData = newProfile;
           }
 
-          // Set user data (with or without profile)
-          const userData: User = {
-            id: session.user.id,
-            email: session.user.email || '',
-            full_name: profile?.full_name || session.user.user_metadata?.full_name || null,
-            role: (profile?.role || session.user.user_metadata?.role || 'student') as User['role'],
-            avatar_url: profile?.avatar_url || null,
-            wallet: profile?.wallet || 0,
-            minutes: profile?.minutes || 0,
-            daily_free_minutes_used: profile?.daily_free_minutes_used || 0,
-            last_free_minutes_reset: profile?.last_free_minutes_reset || null,
+          // Update Redux + context with full profile data
+          const fullUser: User = {
+            id: firebaseUser.uid,
+            email: firebaseUser.email || '',
+            full_name: profileData.full_name || firebaseUser.displayName || null,
+            role: (profileData.role || 'student') as User['role'],
+            avatar_url: profileData.avatar_url || firebaseUser.photoURL || null,
+            wallet: profileData.wallet || 0,
+            minutes: profileData.minutes || 0,
+            daily_free_minutes_used: profileData.daily_free_minutes_used || 0,
+            last_free_minutes_reset: profileData.last_free_minutes_reset || null,
           };
-
-          dispatch(setUser(userData));
-        } else if (mounted) {
-          console.log('No session found');
-          dispatch(setUser(null));
+          dispatch(setUser(fullUser));
+          setCurrentUser(fullUser);
+        } catch (err) {
+          console.error('Background profile fetch failed:', err);
         }
-      } catch (error) {
-        console.error('Error initializing auth:', error);
-        if (mounted) {
-          dispatch(setUser(null));
-        }
-      } finally {
-        if (mounted) {
-          dispatch(setLoading(false));
-          setIsInitialized(true);
-          console.log('Auth initialization complete');
-        }
+      } else {
+        dispatch(setUser(null));
+        setCurrentUser(null);
+        dispatch(setLoading(false));
+        setIsInitialized(true);
       }
-    };
-
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.id);
-        
-        if (!mounted) return;
-        
-        if (event === 'SIGNED_IN' && session?.user) {
-          // Fetch profile data for signed in user
-          supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .maybeSingle()
-            .then(({ data: profile, error: profileError }) => {
-              if (profileError) {
-                console.error('Error fetching profile on sign in:', profileError);
-              }
-
-              const userData: User = {
-                id: session.user.id,
-                email: session.user.email || '',
-                full_name: profile?.full_name || session.user.user_metadata?.full_name || null,
-                role: (profile?.role || session.user.user_metadata?.role || 'student') as User['role'],
-                avatar_url: profile?.avatar_url || null,
-                wallet: profile?.wallet || 0,
-                minutes: profile?.minutes || 0,
-                daily_free_minutes_used: profile?.daily_free_minutes_used || 0,
-                last_free_minutes_reset: profile?.last_free_minutes_reset || null,
-              };
-
-              dispatch(setUser(userData));
-              dispatch(setLoading(false));
-            });
-        } else if (event === 'SIGNED_OUT') {
-          dispatch(setUser(null));
-          dispatch(setLoading(false));
-        } else if (event === 'TOKEN_REFRESHED' && session?.user) {
-          // Don't refetch profile on token refresh, just update the existing user
-          console.log('Token refreshed for user:', session.user.id);
-        }
-      }
-    );
-
-    // Initialize auth only once
-    initializeAuth();
+    });
 
     return () => {
-      mounted = false;
-      subscription.unsubscribe();
+      clearTimeout(safetyTimer);
+      unsubscribe();
     };
   }, [dispatch]);
 
-  // Show loading only until we're initialized
   if (!isInitialized) {
-    console.log('Auth not yet initialized, showing loading...');
     return (
       <div className="min-h-screen flex items-center justify-center bg-black">
-        <SparkLoader text="Know It All" color="white" />
+        <SparkLoader text="Wisora" color="white" />
       </div>
     );
   }
 
   return (
-    <AuthContext.Provider value={{}}>
+    <AuthContext.Provider value={{ user: currentUser }}>
       {children}
     </AuthContext.Provider>
   );

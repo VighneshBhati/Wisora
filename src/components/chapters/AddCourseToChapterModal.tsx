@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { auth } from "@/integrations/firebase/client";
 import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -39,14 +40,14 @@ export const AddCourseToChapterModal = ({ isOpen, onClose, chapterId, onCourseAd
   const fetchAvailableCourses = async () => {
     try {
       setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       if (!user) return;
 
       // Get teacher's courses that are not in any chapter or not in this chapter
       const { data: coursesData, error } = await supabase
         .from('courses')
         .select('*')
-        .eq('instructor_id', user.id)
+        .eq('instructor_id', user.uid)
         .is('chapter_id', null);
 
       if (error) throw error;
@@ -68,14 +69,14 @@ export const AddCourseToChapterModal = ({ isOpen, onClose, chapterId, onCourseAd
       setAdding(courseId);
       const course = courses.find(c => c.id === courseId);
       if (!course) throw new Error('Course not found');
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       if (!user) throw new Error('User not found');
       // Create chapter_object for the course
       const { error: objectError } = await supabase.from('chapter_objects').insert({
         chapter_id: chapterId,
         object_type: 'course',
         object_id: course.id,
-        shared_by: user.id,
+        shared_by: user.uid,
       });
       if (objectError) throw objectError;
       // Enroll all students in the chapter who are not already enrolled in the course

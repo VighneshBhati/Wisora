@@ -59,7 +59,7 @@ export const CreateCourseModal = ({ isOpen, onClose, onCourseCreated }: CreateCo
 
     setIsLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       if (!user) throw new Error('User not authenticated');
 
       const { error } = await supabase
@@ -69,7 +69,7 @@ export const CreateCourseModal = ({ isOpen, onClose, onCourseCreated }: CreateCo
             title: formData.title,
             description: formData.description,
             price: formData.price,
-            instructor_id: user.id,
+            instructor_id: user.uid,
             status: 'draft',
             cover_image_url: uploadedImage?.url || null
           }

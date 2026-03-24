@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -70,7 +70,7 @@ export const ExpertBookingRequests = () => {
 
   return (
     <>
-      <SEOHead title="Booking Requests | KIA Expert" />
+      <SEOHead title="Booking Requests | Wisora Expert" />
       <DashboardLayout>
         <div className="space-y-6">
           <div>
@@ -196,3 +196,4 @@ export const ExpertBookingRequests = () => {
     </>
   );
 };
+

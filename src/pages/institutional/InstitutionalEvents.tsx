@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -83,7 +83,7 @@ export const InstitutionalEvents = () => {
 
   return (
     <>
-      <SEOHead title="Events & Workshops | KIA Institutional" />
+      <SEOHead title="Events & Workshops | Wisora Institutional" />
       <DashboardLayout>
         <div className="space-y-6">
           <div className="flex items-center justify-between">
@@ -98,7 +98,7 @@ export const InstitutionalEvents = () => {
 
           <Tabs defaultValue="upcoming">
             <TabsList className="bg-white/5 border border-white/10">
-              <TabsTrigger value="upcoming">Upcoming ({upcomingEvents.length})</TabsTrigger>
+              <TabsTrigger value="upcoming">Upcoming ({events.length})</TabsTrigger>
               <TabsTrigger value="past">Past Events ({pastEvents.length})</TabsTrigger>
             </TabsList>
 
@@ -198,3 +198,4 @@ export const InstitutionalEvents = () => {
     </>
   );
 };
+

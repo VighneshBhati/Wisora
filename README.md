@@ -1,16 +1,16 @@
-# KIA — Know It All
+# Wisora
 
 > **Talk to real experience.**
 
-KIA is India's expert guidance platform. Book 1-on-1 sessions with verified professionals — career coaches, doctors, lawyers, founders, artists, and more. No fluff. Just real conversations with people who've actually been there.
+Wisora is India's expert guidance platform. Book 1-on-1 sessions with verified professionals — career coaches, doctors, lawyers, founders, artists, and more. No fluff. Just real conversations with people who've actually been there.
 
 ---
 
-## What is KIA?
+## What is Wisora?
 
-Most platforms sell you courses. KIA gives you access to people.
+Most platforms sell you courses. Wisora gives you access to people.
 
-Whether you're a student figuring out your career, a professional making a pivot, or an institution looking to upskill your team — KIA connects you directly with verified experts for live, on-demand guidance sessions.
+Whether you're a student figuring out your career, a professional making a pivot, or an institution looking to upskill your team — Wisora connects you directly with verified experts for live, on-demand guidance sessions.
 
 ---
 
@@ -79,13 +79,10 @@ VITE_OPENROUTER_API_KEY=your_openrouter_key
 
 | Name | Role |
 |------|------|
-| Vighnesh Bhati | Founder & CEO |
-| Vikas Balara | Co-Founder & CTO |
-| Vidhi Jain | Head of Product |
-| Suhani Joshi | Head of Growth |
+| Arsh Maheshwari | Founder & CEO |
 
 ---
 
 ## License
 
-Private. All rights reserved © KIA 2025.
+Private. All rights reserved © Wisora 2025.

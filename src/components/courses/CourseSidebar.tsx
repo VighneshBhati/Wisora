@@ -1,4 +1,5 @@
 import React from 'react';
+import { auth } from "@/integrations/firebase/client";
 import { useNavigate, Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -117,7 +118,7 @@ export const CourseSidebar = ({
   const [userId, setUserId] = React.useState<string | undefined>(undefined);
   React.useEffect(() => {
     async function fetchUser() {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       setUserId(user?.id);
     }
     fetchUser();

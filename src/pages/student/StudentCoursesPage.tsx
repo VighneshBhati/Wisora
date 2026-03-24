@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { supabase } from '@/integrations/supabase/client';
+import { auth } from '@/integrations/firebase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -26,7 +27,6 @@ import { useSecureStudentEnrolledCourses } from '@/lib/hooks/secure-student-hook
 import { PremiumCourseCard } from '@/components/courses/PremiumCourseCard';
 import { CourseCardSkeleton } from '@/components/student/skeletons/CourseCardSkeleton';
 import { useTranslation } from 'react-i18next';
-import type { User } from '@supabase/supabase-js';
 import { SEOHead } from '@/components/seo';
 import GlowBorderCard from '@/components/ui/GlowBorderCard';
 
@@ -72,7 +72,7 @@ export const StudentCoursesPage = () => {
   const { toast } = useToast();
   const { user } = useSelector((state: RootState) => state.auth);
   const { teacher } = useTenant();
-  const [supabaseUser, setSupabaseUser] = useState<User | null>(null);
+  const [supabaseUser, setSupabaseUser] = useState<{ id: string; email: string } | null>(null);
   const { data: enrolledCourses, isLoading, error } = useSecureStudentEnrolledCourses(supabaseUser, teacher);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -80,13 +80,12 @@ export const StudentCoursesPage = () => {
   const navigate = useNavigate();
   const { t } = useTranslation('dashboard');
 
-  // Get Supabase user on component mount
+  // Get Firebase user on component mount
   useEffect(() => {
-    const getSupabaseUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setSupabaseUser(user);
-    };
-    getSupabaseUser();
+    const fbUser = auth.currentUser;
+    if (fbUser) {
+      setSupabaseUser({ id: fbUser.uid, email: fbUser.email || '' });
+    }
   }, []);
 
   const courseCategories = Array.from(new Set(enrolledCourses?.map(e => e.course.category).filter(Boolean) || []));

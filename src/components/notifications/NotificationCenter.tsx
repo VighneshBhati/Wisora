@@ -27,13 +27,14 @@ export const NotificationCenter = () => {
     fetchNotifications();
     
     // Set up real-time subscription for new notifications
+    const currentUser = auth.currentUser;
     const channel = supabase
       .channel('notifications')
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
         table: 'notifications',
-        filter: `user_id=eq.${supabase.auth.getUser().then(u => u.data.user?.id)}`
+        filter: currentUser ? `user_id=eq.${currentUser.uid}` : undefined
       }, () => {
         fetchNotifications();
       })
@@ -46,13 +47,13 @@ export const NotificationCenter = () => {
 
   const fetchNotifications = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       if (!user) return;
 
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', user.uid)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -95,13 +96,13 @@ export const NotificationCenter = () => {
 
   const markAllAsRead = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       if (!user) return;
 
       const { error } = await supabase
         .from('notifications')
         .update({ read_at: new Date().toISOString() })
-        .eq('user_id', user.id)
+        .eq('user_id', user.uid)
         .is('read_at', null);
 
       if (error) throw error;

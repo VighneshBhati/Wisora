@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { auth } from "@/integrations/firebase/client";
 import { useSelector } from 'react-redux';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -43,16 +44,16 @@ interface CourseActionResponse {
   message?: string;
 }
 
-const TEACHER_SYSTEM_PROMPT = `AI assistant on KIA. Help experts with sessions, bookings, earnings. Reply in â‰¤3 sentences.`;
+const TEACHER_SYSTEM_PROMPT = `AI assistant on Wisora. Help experts with sessions, bookings, earnings. Reply in =3 sentences.`;
 
-const TEACHER_ACTION_SYSTEM_PROMPT = `AI on KIA. Output JSON array only. Actions: create_course, edit_course, delete_course. Fields: action, title, description, price, status. If no action needed: [{"action":"none","message":"..."}]`;
+const TEACHER_ACTION_SYSTEM_PROMPT = `AI on Wisora. Output JSON array only. Actions: create_course, edit_course, delete_course. Fields: action, title, description, price, status. If no action needed: [{"action":"none","message":"..."}]`;
 
-const STUDENT_SYSTEM_PROMPT = `AI on KIA. Help users find experts, book sessions, get advice. Reply in â‰¤3 sentences.`;
+const STUDENT_SYSTEM_PROMPT = `AI on Wisora. Help users find experts, book sessions, get advice. Reply in =3 sentences.`;
 
-// Simple local responses for common greetings â€” saves API quota
+// Simple local responses for common greetings — saves API quota
 const LOCAL_RESPONSES: Record<string, string> = {
   'hi': 'Hi there! How can I help you today? You can ask me about finding experts, booking sessions, or career advice.',
-  'hello': 'Hello! I\'m your KIA assistant. Ask me anything about finding the right expert or booking a session.',
+  'hello': 'Hello! I\'m your Wisora assistant. Ask me anything about finding the right expert or booking a session.',
   'hey': 'Hey! What can I help you with today?',
   'hie': 'Hi there! How can I help you today?',
   'thanks': 'You\'re welcome! Let me know if you need anything else.',
@@ -66,7 +67,7 @@ function getLocalResponse(message: string): string | null {
 }
 
 async function sendMessageToGemini({ message, userRole, actionMode, history }: { message: string, userRole: string, actionMode: boolean, history: ChatMessage[] }): Promise<CourseActionResponse[] | { message: string }> {
-  // Check for local response first â€” saves quota
+  // Check for local response first — saves quota
   if (!actionMode) {
     const local = getLocalResponse(message);
     if (local) return { message: local };
@@ -76,7 +77,7 @@ async function sendMessageToGemini({ message, userRole, actionMode, history }: {
     ? (actionMode ? TEACHER_ACTION_SYSTEM_PROMPT : TEACHER_SYSTEM_PROMPT)
     : STUDENT_SYSTEM_PROMPT;
 
-  // Only last 4 messages for context â€” saves tokens
+  // Only last 4 messages for context — saves tokens
   const recentHistory = history.slice(-4);
   const messages: AIMessage[] = [
     ...recentHistory.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
@@ -263,7 +264,7 @@ export const ChatbotSidebar = () => {
           // For delete and edit operations, resolve the entity ID
           let resolvedData = { ...firstAction };
           if ((firstAction.action === 'delete_course' || firstAction.action === 'edit_course') && userRole === 'teacher') {
-            const { data: { user: currentUser } } = await supabase.auth.getUser();
+            const currentUser = auth.currentUser;
             if (currentUser) {
               const resolvedId = await resolveEntityId(message, 'course', currentUser.id);
               if (resolvedId) {
@@ -365,7 +366,7 @@ export const ChatbotSidebar = () => {
     if (!pendingAction) return;
 
     try {
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      const currentUser = auth.currentUser;
       if (!currentUser) {
         toast({
           title: t('uiComponents.chatbot.error'),
@@ -803,3 +804,4 @@ export const ChatbotSidebar = () => {
     </>
   );
 };
+

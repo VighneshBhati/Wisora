@@ -64,7 +64,7 @@ export const GroupObjectsSection = ({ groupId, isCreator, isMember }: GroupObjec
 
   useEffect(() => {
     const getCurrentUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       setCurrentUserId(user?.id || null);
     };
     getCurrentUser();
@@ -116,7 +116,7 @@ export const GroupObjectsSection = ({ groupId, isCreator, isMember }: GroupObjec
     if (!newObject.object_type || !newObject.title.trim()) return;
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       if (!user) return;
 
       const { error } = await supabase
@@ -126,7 +126,7 @@ export const GroupObjectsSection = ({ groupId, isCreator, isMember }: GroupObjec
           object_type: newObject.object_type,
           title: newObject.title.trim(),
           description: newObject.description.trim() || null,
-          shared_by: user.id,
+          shared_by: user.uid,
           object_data: newObject.object_data
         });
 

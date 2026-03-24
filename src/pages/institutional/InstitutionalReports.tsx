@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,9 +26,21 @@ const topUsers = [
 ];
 
 export const InstitutionalReports = () => {
+  const downloadReport = () => {
+    const header = 'Expert,Domain,Sessions,Rating,Credits Used\n';
+    const rows = topExperts.map(e => `"${e.name}","${e.domain}",${e.sessions},${e.rating},${e.credits}`).join('\n');
+    const blob = new Blob([header + rows], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'wisora-report.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <>
-      <SEOHead title="Reports & Analytics | KIA Institutional" />
+      <SEOHead title="Reports & Analytics | Wisora Institutional" />
       <DashboardLayout>
         <div className="space-y-8">
           <div className="flex items-center justify-between">
@@ -36,7 +48,7 @@ export const InstitutionalReports = () => {
               <h1 className="text-2xl font-black">Reports & Analytics</h1>
               <p className="text-muted-foreground">Track usage, sessions, and expert performance</p>
             </div>
-            <Button variant="outline" className="border-white/10 hover:bg-white/5">
+            <Button variant="outline" className="border-white/10 hover:bg-white/5" onClick={downloadReport}>
               <Download className="h-4 w-4 mr-2" /> Export Report
             </Button>
           </div>
@@ -141,3 +153,4 @@ export const InstitutionalReports = () => {
     </>
   );
 };
+

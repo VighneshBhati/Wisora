@@ -1,4 +1,4 @@
-{
+﻿{
   "navbar": {
     "home": "Home",
     "dashboard": "Dashboard",
@@ -124,7 +124,8 @@
   "auth": {
     "login": "Login",
     "signup": "Sign Up",
-    "loginDescription": "Access your KIA account and connect with experts",
+    "loginDescription": "Access your Wisora account and connect with experts",
     "signupDescription": "Create a free account to get started"
   }
 }
+

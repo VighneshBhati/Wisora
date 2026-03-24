@@ -2,7 +2,9 @@
 import React, { useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { supabase } from '@/integrations/supabase/client';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
+import { auth, db } from '@/integrations/firebase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -33,33 +35,34 @@ export const Signup = () => {
     setLoading(true);
     setError('');
     setSuccess('');
-
     try {
-      const { error } = await supabase.auth.signUp({
+      const { user: firebaseUser } = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+      await updateProfile(firebaseUser, { displayName: formData.fullName });
+      await setDoc(doc(db, 'profiles', firebaseUser.uid), {
+        id: firebaseUser.uid,
         email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
-            full_name: formData.fullName,
-            role: formData.role,
-          },
-        },
+        full_name: formData.fullName,
+        role: formData.role,
+        avatar_url: null,
+        wallet: 0,
+        minutes: 0,
+        daily_free_minutes_used: 0,
+        last_free_minutes_reset: null,
+        created_at: new Date().toISOString(),
       });
-
-      if (error) throw error;
-
-      setSuccess('Account created successfully! Please check your email to verify your account.');
+      setSuccess('Account created successfully! You are now signed in.');
     } catch (error: any) {
-      setError(error.message);
+      const msg: string = error?.message || 'Signup failed';
+      if (msg.includes('email-already-in-use')) setError('An account with this email already exists.');
+      else if (msg.includes('weak-password')) setError('Password should be at least 6 characters.');
+      else setError(msg);
     } finally {
       setLoading(false);
     }
   };
 
   if (isAuthenticated && user) {
-    const redirectPath = user.role === 'teacher' ? '/teacher/dashboard' : 
-                        user.role === 'admin' ? '/admin/dashboard' : 
-                        '/student/dashboard';
+    const redirectPath = user.role === 'admin' ? '/admin/dashboard' : '/personal/home';
     return <Navigate to={redirectPath} replace />;
   }
 

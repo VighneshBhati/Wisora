@@ -76,7 +76,7 @@ export const CourseCodesManager = ({ courseId }: CourseCodesManagerProps) => {
     e.preventDefault();
     
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       if (!user) throw new Error('User not authenticated');
 
       const codeData = {
@@ -86,7 +86,7 @@ export const CourseCodesManager = ({ courseId }: CourseCodesManagerProps) => {
         discount_amount: newCode.discount_amount ? parseFloat(newCode.discount_amount) : null,
         max_uses: newCode.max_uses ? parseInt(newCode.max_uses) : null,
         expires_at: newCode.expires_at || null,
-        created_by: user.id,
+        created_by: user.uid,
         current_uses: 0,
         is_active: true
       };

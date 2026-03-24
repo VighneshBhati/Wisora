@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -60,7 +60,7 @@ export const ExpertCampusVisits = () => {
 
   return (
     <>
-      <SEOHead title="Campus Visits | KIA Expert" />
+      <SEOHead title="Campus Visits | Wisora Expert" />
       <DashboardLayout>
         <div className="space-y-6">
           <div>
@@ -184,3 +184,4 @@ export const ExpertCampusVisits = () => {
     </>
   );
 };
+

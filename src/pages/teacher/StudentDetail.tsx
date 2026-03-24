@@ -166,7 +166,7 @@ export const StudentDetail = () => {
 
   const fetchStudentDetails = useCallback(async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       if (!user) return;
       setUser(user);
 
@@ -195,7 +195,7 @@ export const StudentDetail = () => {
           )
         `)
         .eq('student_id', studentId)
-        .eq('course.instructor_id', user.id);
+        .eq('course.instructor_id', user.uid);
 
       if (enrollmentsError) throw enrollmentsError;
 

@@ -1,4 +1,4 @@
-
+﻿
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -32,7 +32,7 @@ export const StudentAchievements = ({ stats }: StudentAchievementsProps) => {
     {
       id: 'first_session',
       title: 'First Session',
-      description: 'Completed your first expert session on KIA',
+      description: 'Completed your first expert session on Wisora',
       icon: <BookOpen className="h-4 w-4" />,
       earned: stats.completedCourses > 0,
       rarity: 'common',
@@ -71,7 +71,7 @@ export const StudentAchievements = ({ stats }: StudentAchievementsProps) => {
     {
       id: 'streak_champion',
       title: 'Streak Champion',
-      description: 'Maintained a 30-day engagement streak on KIA',
+      description: 'Maintained a 30-day engagement streak on Wisora',
       icon: <Trophy className="h-4 w-4" />,
       earned: (stats.studyStreak || 0) >= 30,
       progress: Math.min(((stats.studyStreak || 0) / 30) * 100, 100),
@@ -79,8 +79,8 @@ export const StudentAchievements = ({ stats }: StudentAchievementsProps) => {
       category: 'Consistency'
     },
     {
-      id: 'kia_master',
-      title: 'KIA Master',
+      id: "wisora_master",
+      title: 'Wisora Master',
       description: 'Completed 10+ expert sessions across domains',
       icon: <Crown className="h-4 w-4" />,
       earned: stats.completedCourses >= 10,
@@ -123,7 +123,7 @@ export const StudentAchievements = ({ stats }: StudentAchievementsProps) => {
           </div>
           <div className="flex-1 min-w-0">
             <div className="gradient-text text-lg sm:text-xl font-bold">Achievements</div>
-            <CardDescription className="text-muted-foreground/80 text-xs sm:text-sm">Milestones earned on your KIA journey</CardDescription>
+            <CardDescription className="text-muted-foreground/80 text-xs sm:text-sm">Milestones earned on your Wisora journey</CardDescription>
           </div>
         </div>
       </CardHeader>
@@ -184,3 +184,5 @@ export const StudentAchievements = ({ stats }: StudentAchievementsProps) => {
     </Card>
   );
 };
+
+

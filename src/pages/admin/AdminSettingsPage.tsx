@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { SEOHead } from '@/components/seo/SEOHead';
 import { TeacherPageHeader } from '@/components/teacher/TeacherPageHeader';
@@ -32,9 +32,9 @@ export const AdminSettingsPage = () => {
   // Settings state
   const [settings, setSettings] = useState({
     // General Settings
-    platformName: 'kia',
+    platformName: 'wisora',
     platformDescription: 'Expert guidance as a service — verified professionals, real answers',
-    supportEmail: 'support@kia.in',
+    supportEmail: 'support@wisora.in',
     defaultLanguage: 'en',
     timezone: 'UTC',
     
@@ -51,7 +51,7 @@ export const AdminSettingsPage = () => {
     smtpPort: 587,
     smtpUsername: '',
     smtpPassword: '',
-    fromEmail: 'noreply@kia.in',
+    fromEmail: 'noreply@wisora.in',
     
     // Security Settings
     sessionTimeout: 24,
@@ -526,3 +526,4 @@ export const AdminSettingsPage = () => {
     </>
   );
 };
+

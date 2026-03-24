@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -65,7 +65,7 @@ export const InstitutionalDashboard = () => {
 
   return (
     <>
-      <SEOHead title="Institutional Dashboard | KIA" />
+      <SEOHead title="Institutional Dashboard | Wisora" />
       <DashboardLayout>
         <div className="space-y-8">
           {/* Header */}
@@ -179,3 +179,4 @@ export const InstitutionalDashboard = () => {
     </>
   );
 };
+

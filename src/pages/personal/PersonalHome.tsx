@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -130,7 +130,7 @@ export const PersonalHome = () => {
 
   return (
     <>
-      <SEOHead title="Home | KIA" />
+      <SEOHead title="Home | Wisora" />
       <DashboardLayout>
         <div className="space-y-8">
           {/* Hero Banner */}
@@ -259,3 +259,4 @@ export const PersonalHome = () => {
     </>
   );
 };
+

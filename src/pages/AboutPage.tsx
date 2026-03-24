@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SEOHead } from '@/components/seo/SEOHead';
 import { Navbar } from '@/components/layout/Navbar';
@@ -215,10 +215,7 @@ const CubeStage = styled.div`
 const cv = (vars: Record<string, number>) => vars as React.CSSProperties;
 
 const team = [
-  { name: 'Vighnesh Bhati', role: 'Founder & CEO', emoji: '🧠', bio: 'Visionary behind KIA. Passionate about democratising access to real-world expertise across India.' },
-  { name: 'Vikas Balara', role: 'Co-Founder & CTO', emoji: '💻', bio: 'Architect of the KIA platform. Builds the systems that connect seekers with the right experts.' },
-  { name: 'Vidhi Jain', role: 'Head of Product', emoji: '🎨', bio: 'Shapes every user interaction. Ensures KIA feels intuitive, warm, and genuinely useful.' },
-  { name: 'Suhani Joshi', role: 'Head of Growth', emoji: '🚀', bio: 'Drives expert onboarding and community growth. Makes sure the right people find KIA.' },
+  { name: 'Arsh Maheshwari', role: 'Founder & CEO', emoji: '🧠', bio: 'Visionary behind Wisora. Passionate about democratising access to real-world expertise across India.' },
 ];
 
 export const AboutPage = () => {
@@ -227,7 +224,7 @@ export const AboutPage = () => {
 
   return (
     <>
-      <SEOHead title="About Us | KIA — Know It All" />
+      <SEOHead title="About Us | Wisora" />
       <div className="min-h-screen bg-[#090a0f] text-white">
         <Navbar extraXSpacing />
 
@@ -237,13 +234,13 @@ export const AboutPage = () => {
             🇮🇳 Made in India, for India
           </Badge>
           <h1 className="text-4xl md:text-6xl font-black mb-6 leading-tight">
-            We built KIA because<br />
+            We built Wisora because<br />
             <span className="bg-gradient-to-r from-[#00ff75] to-[#3700ff] bg-clip-text text-transparent">
               we needed it ourselves.
             </span>
           </h1>
           <p className="text-white/50 text-lg max-w-2xl mx-auto leading-relaxed">
-            KIA — Know It All — is India's expert guidance platform. We connect curious minds with verified professionals who've actually lived the journey.
+            Wisora — is India's expert guidance platform. We connect curious minds with verified professionals who've actually lived the journey.
           </p>
         </Section>
 
@@ -260,10 +257,10 @@ export const AboutPage = () => {
                 I reached out to a few seniors on LinkedIn. Most never replied. The ones who did gave me five-minute generic advice. I needed an hour with someone who'd been there — not a motivational post, not a course, just an honest conversation.
               </p>
               <p className="text-white/70 text-base md:text-lg leading-relaxed mb-6">
-                That gap — between the questions students carry and the answers professionals hold — is what KIA was built to close. We built the platform we wished existed. A place where you can book 30 minutes with a real Google PM, a CFA charterholder, a founder who's raised funding, or a doctor who switched careers. No fluff. Just real experience, on demand.
+                That gap — between the questions students carry and the answers professionals hold — is what Wisora was built to close. We built the platform we wished existed. A place where you can book 30 minutes with a real Google PM, a CFA charterholder, a founder who's raised funding, or a doctor who switched careers. No fluff. Just real experience, on demand.
               </p>
               <p className="text-white/80 text-base md:text-lg leading-relaxed font-semibold">
-                — Vighnesh Bhati, Founder
+                — Arsh Maheshwari, Founder
               </p>
             </div>
           </div>
@@ -308,7 +305,7 @@ export const AboutPage = () => {
                 </span>
               </div>
               <div className="form_back">
-                <div className="form_title">Partner with KIA</div>
+                <div className="form_title">Partner with Wisora</div>
                 <div className="form_sub">Institutions, colleges & enterprises</div>
                 <input className="inp" placeholder="Organisation name" type="text" />
                 <input className="inp" placeholder="Your name" type="text" />
@@ -350,3 +347,4 @@ export const AboutPage = () => {
     </>
   );
 };
+

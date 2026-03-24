@@ -16,11 +16,11 @@ export const useViewMode = () => useContext(ViewModeContext);
 
 export const ViewModeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [viewMode, setViewModeState] = useState<ViewMode>(() => {
-    return (localStorage.getItem('kia_view_mode') as ViewMode) || 'personal';
+    return (localStorage.getItem('wisora_view_mode') as ViewMode) || 'personal';
   });
 
   const setViewMode = (mode: ViewMode) => {
-    localStorage.setItem('kia_view_mode', mode);
+    localStorage.setItem('wisora_view_mode', mode);
     setViewModeState(mode);
   };
 

@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { PremiumCourseCard } from "@/components/courses/PremiumCourseCard";
 import { Card } from "@/components/ui/card";
 import { CardHeader } from "@/components/ui/card";
@@ -73,7 +73,7 @@ export function ContinueLearningSection({ enrolledCourses, onContinue }) {
             <BookOpen className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground mx-auto mb-3 sm:mb-4 opacity-50" />
             <h3 className="text-base sm:text-lg font-medium mb-2">No sessions yet</h3>
             <p className="text-muted-foreground mb-3 sm:mb-4 text-sm">
-              Book your first session with a KIA expert.
+              Book your first session with a Wisora Expert.
             </p>
             <Link to="/teachers">
               <Button className="btn-primary">

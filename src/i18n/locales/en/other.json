@@ -35,10 +35,10 @@
     "topicInsightsDescription": "Discover trending discussion topics",
     "studyBuddy": "Study Buddy",
     "studyBuddyDescription": "Get personalized learning suggestions",
-    "proTip1": "💡 Use clear, specific titles for better responses",
-    "proTip2": "🤖 Try the AI Answer feature for instant help",
-    "proTip3": "👥 Allow student answers to get diverse perspectives",
-    "proTip4": "🎯 Use tags to categorize your questions",
+    "proTip1": "ðŸ’¡ Use clear, specific titles for better responses",
+    "proTip2": "ðŸ¤– Try the AI Answer feature for instant help",
+    "proTip3": "ðŸ‘¥ Allow student answers to get diverse perspectives",
+    "proTip4": "ðŸŽ¯ Use tags to categorize your questions",
     "smartSuggestions": "Smart Suggestions",
     "smartSuggestionsDescription": "Get AI-powered question suggestions",
     "autoCategorization": "Auto-Categorization",
@@ -360,7 +360,7 @@
     "sharePin": "Share this PIN with your friends:",
     "startGame": "Start Game",
     "waitingForHost": "Waiting for the host to start the game...",
-    "debugTools": "🐛 Debug Tools",
+    "debugTools": "ðŸ› Debug Tools",
     "roomCodeCopied": "Room Code Copied",
     "shareCodeDescription": "Share this code with your friends!",
     "invitationLinkCopied": "Invitation Link Copied",
@@ -418,8 +418,8 @@
       "courseDeleted": "Course deleted successfully!",
       "courseUpdated": "Course updated successfully!",
       "actionNotImplemented": "Action not yet implemented",
-      "actionCompleted": "✅ Action completed successfully: {{description}}",
-      "actionFailed": "❌ Failed to execute action: {{error}}",
+      "actionCompleted": "âœ… Action completed successfully: {{description}}",
+      "actionFailed": "âŒ Failed to execute action: {{error}}",
       "userNotAuthenticated": "User not authenticated",
       "courseIdRequired": "Course ID is required for {{action}}",
       "failedToExecuteAction": "Failed to execute action",
@@ -615,7 +615,7 @@
     "lastUpdated": "Last updated: January 2025",
     "byContinuing": "By continuing, you agree to our",
     "and": "and",
-    "copyright": "©2025 KIA — Know It All",
+    "copyright": "©2025 Wisora",
     "footerLinks": {
       "terms": "Terms",
       "privacy": "Privacy",
@@ -624,11 +624,11 @@
     },
     "legalContent": {
       "terms": {
-        "welcome": "Welcome to KIA — Know It All. By accessing our platform, you agree to these terms of service.",
-        "acceptance": "By using KIA, you accept and agree to be bound by these Terms of Service and all applicable laws and regulations.",
+        "welcome": "Welcome to Wisora. By accessing our platform, you agree to these terms of service.",
+        "acceptance": "By using Wisora, you accept and agree to be bound by these Terms of Service and all applicable laws and regulations.",
         "userAccounts": "You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account.",
         "acceptableUse": "You agree not to use the service for any unlawful purpose or to violate any applicable laws or regulations.",
-        "intellectualProperty": "All content on KIA is protected by copyright and other intellectual property laws.",
+        "intellectualProperty": "All content on Wisora is protected by copyright and other intellectual property laws.",
         "termination": "We reserve the right to terminate or suspend your account at any time for violations of these terms."
       },
       "privacy": {
@@ -640,7 +640,7 @@
         "yourRights": "You have the right to access, update, or delete your personal information at any time."
       },
       "help": {
-        "gettingStarted": "Welcome to KIA — Know It All! Here's how to get started with your expert guidance journey.",
+        "gettingStarted": "Welcome to Wisora! Here's how to get started with your expert guidance journey.",
         "creatingAccount": "Click \"Create Account\" on the homepage and follow the simple registration process.",
         "enrollingInCourses": "Browse our experts and click \"Book Session\" on any expert that interests you.",
         "accessingCourses": "Once booked, you can access your sessions from your dashboard at any time.",
@@ -663,3 +663,6 @@
     }
   }
 }
+
+
+

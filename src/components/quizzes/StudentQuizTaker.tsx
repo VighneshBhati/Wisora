@@ -223,13 +223,13 @@ export const StudentQuizTaker = ({ quiz, courseId, onBackToCourse, attemptId }: 
       setQuestions(processedQuestions);
 
       // Fetch user's attempts
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       if (user) {
         const { data: attemptsData, error: attemptsError } = await supabase
           .from('quiz_attempts')
           .select('*')
           .eq('quiz_id', quiz.id)
-          .eq('student_id', user.id)
+          .eq('student_id', user.uid)
           .order('started_at', { ascending: false });
 
         if (attemptsError) throw attemptsError;
@@ -304,14 +304,14 @@ export const StudentQuizTaker = ({ quiz, courseId, onBackToCourse, attemptId }: 
 
   const startAttempt = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       if (!user) throw new Error('User not authenticated');
 
       const { data, error } = await supabase
         .from('quiz_attempts')
         .insert({
           quiz_id: quiz.id,
-          student_id: user.id,
+          student_id: user.uid,
           answers: {},
           max_score: questions.reduce((sum, q) => sum + q.points, 0)
         })

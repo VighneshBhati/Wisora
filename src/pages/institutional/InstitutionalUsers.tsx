@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -116,7 +116,7 @@ export const InstitutionalUsers = () => {
 
   return (
     <>
-      <SEOHead title="User Management | KIA" />
+      <SEOHead title="User Management | Wisora" />
       <DashboardLayout>
         <div className="space-y-6">
           <div className="flex items-center justify-between">
@@ -200,3 +200,4 @@ export const InstitutionalUsers = () => {
     </>
   );
 };
+

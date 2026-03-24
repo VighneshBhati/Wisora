@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { auth } from "@/integrations/firebase/client";
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
@@ -187,13 +188,13 @@ export const CourseProgress = () => {
       setCourse(courseData);
 
       // Check enrollment
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       if (user) {
         const { data: enrollment } = await supabase
           .from('enrollments')
           .select('*')
           .eq('course_id', id)
-          .eq('student_id', user.id)
+          .eq('student_id', user.uid)
           .maybeSingle();
 
         const enrolled = !!enrollment;
@@ -209,7 +210,7 @@ export const CourseProgress = () => {
         const { data: progressData } = await supabase
           .from('lesson_progress')
           .select('lesson_id')
-          .eq('student_id', user.id);
+          .eq('student_id', user.uid);
 
         setProgress(progressData?.map(p => p.lesson_id) || []);
 
@@ -220,7 +221,7 @@ export const CourseProgress = () => {
         const { data: attemptsData } = await supabase
           .from('quiz_attempts')
           .select('quiz_id, score, max_score')
-          .eq('student_id', user.id)
+          .eq('student_id', user.uid)
           .not('submitted_at', 'is', null);
 
         setQuizAttempts(attemptsData || []);

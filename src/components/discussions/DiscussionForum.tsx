@@ -189,14 +189,14 @@ export const DiscussionForum = ({ courseId }: DiscussionForumProps) => {
   const createDiscussion = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       if (!user) throw new Error('Not authenticated');
 
       const { error } = await supabase
         .from('discussions')
         .insert({
           course_id: courseId,
-          student_id: user.id,
+          student_id: user.uid,
           title: newDiscussion.title,
           content: newDiscussion.content
         });
@@ -226,14 +226,14 @@ export const DiscussionForum = ({ courseId }: DiscussionForumProps) => {
     if (!selectedDiscussion || !newReply.trim()) return;
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       if (!user) throw new Error('Not authenticated');
 
       const { error } = await supabase
         .from('discussion_replies')
         .insert({
           discussion_id: selectedDiscussion,
-          user_id: user.id,
+          user_id: user.uid,
           content: newReply.trim()
         });
 

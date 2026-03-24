@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { auth } from "@/integrations/firebase/client";
 import { Link, useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -81,7 +82,7 @@ export const TeacherChapterManagement = () => {
 
   const fetchChapterData = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       if (!user) return;
       // Get chapter details
       const { data: chapterData, error: chapterError } = await supabase

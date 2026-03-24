@@ -2,7 +2,8 @@ import { ModeSwitcher } from '@/components/layout/ModeSwitcher';
 import React, { useEffect, useState, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { supabase } from '@/integrations/supabase/client';
+import { signOut } from 'firebase/auth';
+import { auth } from '@/integrations/firebase/client';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
@@ -135,7 +136,7 @@ export const Navbar = ({ extraXSpacing = false }: { extraXSpacing?: boolean }) =
   }
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    await signOut(auth);
     navigate('/');
   };
 
@@ -146,6 +147,7 @@ export const Navbar = ({ extraXSpacing = false }: { extraXSpacing?: boolean }) =
   // NAVIGATION LINKS
   const navLinks = [
     { to: '/', label: t('navbar.home'), icon: Home },
+    { to: '/experts', label: 'Experts', icon: GraduationCap },
     ...(userRole === 'student'
       ? [
         { to: '/courses', label: t('navbar.courses'), icon: Search },
@@ -335,51 +337,54 @@ export const Navbar = ({ extraXSpacing = false }: { extraXSpacing?: boolean }) =
   // AUTHENTICATED NAVBAR
   return (
     <nav className={`bg-card border border-border/20 fixed top-2 md:top-4 left-4 right-4 z-50 rounded-2xl shadow-xl backdrop-blur-xl ${extraXSpacing ? 'md:left-8 md:right-8 lg:left-16 lg:right-16' : ''} text-card-foreground transition-all duration-500 ease-in-out ${hidden ? '-translate-y-24 opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'} max-w-full md:max-w-6xl mx-auto`}>
-      <div className="px-6 py-2 md:py-4">
-        <div className="flex items-center justify-between">
-          <Link to="/" className="flex items-center space-x-2">
-            <Logo className="h-8 w-auto" />
-            <span className="text-2xl font-bold text-black dark:text-white">{teacher?.display_name || PLATFORM_NAME}</span>
+      <div className="px-4 py-2 md:py-3">
+        <div className="flex items-center gap-2">
+          {/* Logo — shrink-0 so it never gets squeezed by the mode switcher */}
+          <Link to="/" className="flex items-center gap-2 shrink-0">
+            <Logo className="h-7 w-auto" />
+            <span className="text-lg font-bold text-black dark:text-white hidden sm:block">{teacher?.display_name || PLATFORM_NAME}</span>
           </Link>
-          {/* Mode Switcher - center of navbar for authenticated users */}
+          {/* Mode Switcher — flex-1 + justify-center keeps it truly centered */}
           {!isMobile && isAuthenticated && (
-            <div className="hidden md:flex">
+            <div className="flex-1 flex justify-center">
               <ModeSwitcher compact />
             </div>
           )}
           {/* Sidebar Trigger and Profile Dropdown */}
           {isMobile ? (
+            <div className="ml-auto shrink-0">
             <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="ml-4 px-3" aria-label={t('navbar.openSidebar')}>
-                <FaBars className="h-7 w-7" />
+                <Button variant="ghost" size="icon" className="ml-2 px-3" aria-label={t('navbar.openSidebar')}>
+                <FaBars className="h-6 w-6" />
                 </Button>
               </SheetTrigger>
                              <SheetContent side="right" className="w-full max-w-sm p-0 bg-background/95 backdrop-blur-xl border-l border-border/40">
                  <NavbarSidebarContent user={user} navLinks={sideNavLinks} handleLogout={handleLogout} setSheetOpen={setSheetOpen} isActive={isActive} />
                </SheetContent>
             </Sheet>
+            </div>
           ) : (
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center gap-2 shrink-0">
               {navLinks.map((link) => (
                 <NavLink key={link.to} to={link.to} icon={link.icon} className="hidden lg:inline-flex" isActive={isActive}>
                   {link.label}
                 </NavLink>
               ))}
               
-              <Separator orientation="vertical" className="h-8 mx-2" />
+              <Separator orientation="vertical" className="h-6 mx-1" />
               
-              <ThemeToggle buttonClassName="glass hover-glow px-3 py-2 hover:bg-primary-500/20 focus:bg-primary/20 active:bg-primary/20 transition-colors group" iconClassName="group-hover:text-primary-500 transition-colors" />
-              <Separator orientation="vertical" className="h-8 mx-2" />
+              <ThemeToggle buttonClassName="glass hover-glow px-2 py-2 hover:bg-primary-500/20 focus:bg-primary/20 active:bg-primary/20 transition-colors group" iconClassName="group-hover:text-primary-500 transition-colors" />
+              <Separator orientation="vertical" className="h-6 mx-1" />
 
               <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="icon" className="glass hover-glow flex items-center justify-center hover:bg-primary/10 focus:bg-primary/20 active:bg-primary/20 transition-colors" aria-label="Profile">
-                    <Avatar className="h-10 w-10">
+                    <Avatar className="h-8 w-8">
                       {user?.avatar_url ? (
                         <AvatarImage src={user.avatar_url} alt={user?.full_name || user?.email || 'User'} />
                       ) : (
-                        <AvatarFallback className="h-10 w-10 flex items-center justify-center rounded-full bg-primary/20 text-primary font-bold text-lg uppercase focus:ring-2 focus:ring-primary/40">
+                        <AvatarFallback className="h-8 w-8 flex items-center justify-center rounded-full bg-primary/20 text-primary font-bold text-sm uppercase focus:ring-2 focus:ring-primary/40">
                           {user?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}
                         </AvatarFallback>
                       )}
@@ -437,12 +442,12 @@ export const Navbar = ({ extraXSpacing = false }: { extraXSpacing?: boolean }) =
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              <Separator orientation="vertical" className="h-8 mx-2" />
+              <Separator orientation="vertical" className="h-6 mx-1" />
 
               <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
                 <SheetTrigger asChild>
                   <Button variant="ghost" size="icon" aria-label={t('navbar.openSidebar')} className='px-3'>
-                  <FaBars className="h-7 w-7" />
+                  <FaBars className="h-6 w-6" />
                   </Button>
                 </SheetTrigger>
                                  <SheetContent side="right" className="w-full max-w-sm p-0 bg-background/95 backdrop-blur-xl border-l border-border/40">

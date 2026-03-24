@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { auth } from "@/integrations/firebase/client";
 import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -112,7 +113,7 @@ export const PurchaseChoicesModal = ({
       setLoading(true);
 
       // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       if (!user) {
         toast({
           title: t('invoices.notifications.authenticationRequired'),
@@ -124,7 +125,7 @@ export const PurchaseChoicesModal = ({
 
       // Create invoice for the selected payment method
       const invoiceData = {
-        user_id: user.id,
+        user_id: user.uid,
         instructor_id: item.instructor_id,
         item_id: item.id,
         item_type: item.type || 'course' as const,

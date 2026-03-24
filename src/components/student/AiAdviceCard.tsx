@@ -1,4 +1,4 @@
-
+﻿
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -192,7 +192,7 @@ export const AiAdviceCard = () => {
       if (uniqueCategories.length === 1 && enrollments.length > 2) {
         generatedAdvice.push({
           category: 'Domain Diversification',
-          advice: `You've only explored ${uniqueCategories[0]}. KIA has experts across Finance, Law, Career, Tech and more — try a trial session in a new domain.`,
+          advice: `You've only explored ${uniqueCategories[0]}. Wisora has experts across Finance, Law, Career, Tech and more — try a trial session in a new domain.`,
           priority: 'medium',
           icon: <BookOpen className="h-4 w-4" />,
           actionable: true,
@@ -218,7 +218,7 @@ export const AiAdviceCard = () => {
         if (recentQuizAvg > 0.8) {
           generatedAdvice.push({
             category: 'Achievement Unlocked',
-            advice: 'Outstanding performance this week! You\'re making the most of KIA. Consider leaving a review for your expert.',
+            advice: 'Outstanding performance this week! You\'re making the most of Wisora. Consider leaving a review for your expert.',
             priority: 'low',
             icon: <CheckCircle2 className="h-4 w-4" />,
             actionable: false,
@@ -350,7 +350,7 @@ export const AiAdviceCard = () => {
           </div>
           <div className="flex-1 min-w-0">
             <div className="gradient-text text-lg sm:text-xl font-bold">AI Guidance Advisor</div>
-            <span className="text-muted-foreground/80 text-xs sm:text-sm">Personalized insights to maximize your KIA experience</span>
+            <span className="text-muted-foreground/80 text-xs sm:text-sm">Personalized insights to maximize your Wisora experience</span>
           </div>
           <Button 
             onClick={generateAdvice} 
@@ -431,3 +431,4 @@ export const AiAdviceCard = () => {
     </Card>
   );
 };
+

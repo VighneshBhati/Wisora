@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { auth } from "@/integrations/firebase/client";
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -89,13 +90,13 @@ export const LessonContent = ({ lesson, course, isCompleted, onLessonComplete, o
       }
 
       // Check view count for this user
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       if (user) {
         const { data: viewsData } = await supabase
           .from('lesson_views')
           .select('*')
           .eq('lesson_id', lesson.id)
-          .eq('student_id', user.id);
+          .eq('student_id', user.uid);
 
         setViewCount(viewsData?.length || 0);
 
@@ -109,7 +110,7 @@ export const LessonContent = ({ lesson, course, isCompleted, onLessonComplete, o
           .from('lesson_views')
           .select('device_type')
           .eq('lesson_id', lesson.id)
-          .eq('student_id', user.id);
+          .eq('student_id', user.uid);
 
         if (deviceViewsData) {
           // Count unique devices based on detailed device fingerprints
@@ -131,7 +132,7 @@ export const LessonContent = ({ lesson, course, isCompleted, onLessonComplete, o
 
   const trackView = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       if (user) {
         // Get detailed device fingerprint for unique device identification
         const deviceFingerprint = getDetailedDeviceFingerprint();
@@ -140,7 +141,7 @@ export const LessonContent = ({ lesson, course, isCompleted, onLessonComplete, o
           .from('lesson_views')
           .insert({
             lesson_id: lesson.id,
-            student_id: user.id,
+            student_id: user.uid,
             device_type: deviceFingerprint,
           });
 
@@ -155,7 +156,7 @@ export const LessonContent = ({ lesson, course, isCompleted, onLessonComplete, o
 
   const markAsCompleted = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       if (!user) {
         toast({
           title: t('lessonContent.error'),
@@ -169,7 +170,7 @@ export const LessonContent = ({ lesson, course, isCompleted, onLessonComplete, o
         .from('lesson_progress')
         .upsert({
           lesson_id: lesson.id,
-          student_id: user.id,
+          student_id: user.uid,
         }, { onConflict: 'lesson_id,student_id' });
 
       if (error) throw error;

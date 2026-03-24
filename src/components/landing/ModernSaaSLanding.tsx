@@ -1,4 +1,4 @@
-
+﻿
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, useScroll, useTransform, useInView } from 'framer-motion';
 import { 
@@ -191,7 +191,7 @@ const ModernSaaSLanding = () => {
       name: "Vikram Reddy",
       role: "L&D Manager",
       company: "Tata Consultancy",
-      content: "We use KIA for corporate mentoring. Our team's skill development velocity has improved dramatically.",
+      content: "We use Wisora for corporate mentoring. Our team's skill development velocity has improved dramatically.",
       rating: 5,
       image: "👨‍💼",
       size: "large"
@@ -308,7 +308,7 @@ const ModernSaaSLanding = () => {
               <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
                 <Brain className="w-5 h-5 text-black" />
               </div>
-              <span className="text-xl font-black">KIA</span>
+              <span className="text-xl font-black">Wisora</span>
             </motion.div>
 
             {/* Desktop Navigation */}
@@ -807,7 +807,7 @@ const ModernSaaSLanding = () => {
               Trusted by Professionals Across India
             </h2>
             <p className="text-2xl text-gray-400 font-light">
-              See how KIA is transforming expert guidance nationwide
+              See how Wisora is transforming expert guidance nationwide
             </p>
           </motion.div>
 
@@ -1003,7 +1003,7 @@ const ModernSaaSLanding = () => {
                 <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
                   <Brain className="w-5 h-5 text-black" />
                 </div>
-              <span className="text-2xl font-black">KIA</span>
+              <span className="text-2xl font-black">Wisora</span>
               </div>
               <p className="text-gray-400 text-lg leading-relaxed">India's expert guidance platform — connecting you with verified industry veterans.</p>
             </motion.div>
@@ -1030,7 +1030,7 @@ const ModernSaaSLanding = () => {
             transition={{ duration: 1 }}
             className="border-t border-white/10 pt-12 flex flex-col md:flex-row justify-between items-center"
           >
-            <p className="text-gray-400 text-lg">&copy; 2025 KIA. All rights reserved.</p>
+            <p className="text-gray-400 text-lg">&copy; 2025 Wisora. All rights reserved.</p>
             <div className="flex space-x-8 mt-6 md:mt-0 text-gray-400 text-lg">
               <span className="hover:text-white transition-colors cursor-pointer">Privacy</span>
               <span className="hover:text-white transition-colors cursor-pointer">Terms</span>
@@ -1044,3 +1044,4 @@ const ModernSaaSLanding = () => {
 };
 
 export default ModernSaaSLanding;
+

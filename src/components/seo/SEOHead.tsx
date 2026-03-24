@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useLocation } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -84,14 +84,14 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
   // Override with props if provided
   const finalMetadata: SEOMetadata = {
     ...metadata,
-    title: title || (contentTitle ? `${contentTitle} | ${metadata.title.split(' | ').pop() || 'KIA'}` : metadata.title),
+    title: title || (contentTitle ? `${contentTitle} | ${metadata.title.split(' | ').pop() || 'Wisora'}` : metadata.title),
     description: description || contentDescription || metadata.description,
     keywords: keywords || metadata.keywords,
-    ogTitle: ogTitle || (contentTitle ? `${contentTitle} | ${metadata.ogTitle?.split(' | ').pop() || metadata.title.split(' | ').pop() || 'KIA'}` : metadata.ogTitle || metadata.title),
+    ogTitle: ogTitle || (contentTitle ? `${contentTitle} | ${metadata.ogTitle?.split(' | ').pop() || metadata.title.split(' | ').pop() || 'Wisora'}` : metadata.ogTitle || metadata.title),
     ogDescription: ogDescription || contentDescription || metadata.ogDescription || metadata.description,
     ogImage: ogImage || metadata.ogImage,
     ogType: ogType || metadata.ogType,
-    twitterTitle: twitterTitle || (contentTitle ? `${contentTitle} | ${metadata.twitterTitle?.split(' | ').pop() || metadata.title.split(' | ').pop() || 'KIA'}` : metadata.twitterTitle || metadata.title),
+    twitterTitle: twitterTitle || (contentTitle ? `${contentTitle} | ${metadata.twitterTitle?.split(' | ').pop() || metadata.title.split(' | ').pop() || 'Wisora'}` : metadata.twitterTitle || metadata.title),
     twitterDescription: twitterDescription || contentDescription || metadata.twitterDescription || metadata.description,
     twitterImage: twitterImage || metadata.twitterImage || metadata.ogImage,
     canonical: canonical || metadata.canonical,
@@ -125,7 +125,7 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
       <meta property="og:title" content={finalMetadata.ogTitle} />
       <meta property="og:description" content={finalMetadata.ogDescription} />
       <meta property="og:url" content={ogUrl || finalMetadata.canonical || window.location.href} />
-      <meta property="og:site_name" content={tenantName || 'KIA'} />
+      <meta property="og:site_name" content={tenantName || 'Wisora'} />
       {finalMetadata.ogImage && <meta property="og:image" content={finalMetadata.ogImage} />}
       
       {/* Twitter Card */}
@@ -225,3 +225,4 @@ export const TeacherSEO: React.FC<{
 );
 
 export default SEOHead;
+

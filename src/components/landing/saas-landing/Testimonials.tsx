@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { motion } from 'framer-motion';
 import { TestimonialData } from './types';
 
@@ -14,7 +14,7 @@ const Testimonials: React.FC = () => {
     },
     {
       id: 2,
-      text: "As a CA, I joined KIA to share my 25 years of tax expertise. The platform is clean, the clients are serious, and the earnings are great. Highly recommend for retired professionals.",
+      text: "As a CA, I joined Wisora to share my 25 years of tax expertise. The platform is clean, the clients are serious, and the earnings are great. Highly recommend for retired professionals.",
       name: "CA Priya Mehta",
       handle: "Chartered Accountant, Mumbai",
       avatar: "/assests/avatar-6.png"
@@ -28,7 +28,7 @@ const Testimonials: React.FC = () => {
     },
     {
       id: 4,
-      text: "I needed legal advice on a startup contract. Found a retired High Court advocate on KIA. 20 minutes, ₹299, and I had complete clarity. No lawyer fees, no waiting.",
+      text: "I needed legal advice on a startup contract. Found a retired High Court advocate on Wisora. 20 minutes, ₹299, and I had complete clarity. No lawyer fees, no waiting.",
       name: "Sneha Patel",
       handle: "Startup Founder, Ahmedabad",
       avatar: "/assests/avatar-7.png"
@@ -42,7 +42,7 @@ const Testimonials: React.FC = () => {
     },
     {
       id: 6,
-      text: "After 30 years at RBI, I wanted to give back. KIA made it easy to set my availability, price my sessions, and connect with people who genuinely need guidance.",
+      text: "After 30 years at RBI, I wanted to give back. Wisora made it easy to set my availability, price my sessions, and connect with people who genuinely need guidance.",
       name: "Retired RBI Officer",
       handle: "Banking & Finance Expert",
       avatar: "/assests/avatar-5.png"
@@ -151,3 +151,5 @@ const Testimonials: React.FC = () => {
 };
 
 export default Testimonials;
+
+

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -48,7 +48,7 @@ export const ExpertProfile = () => {
 
   return (
     <>
-      <SEOHead title="Expert Profile | KIA" />
+      <SEOHead title="Expert Profile | Wisora" />
       <DashboardLayout>
         <div className="space-y-6">
           <div className="flex items-center justify-between">
@@ -157,7 +157,7 @@ export const ExpertProfile = () => {
               <Card className="glass-card border-white/10">
                 <CardHeader><CardTitle className="text-base font-bold flex items-center gap-2"><Shield className="h-4 w-4" /> Expert Badge System</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
-                  <p className="text-sm text-muted-foreground">Your badge is determined by KIA's verification team based on experience, credentials, and community trust.</p>
+                  <p className="text-sm text-muted-foreground">Your badge is determined by Wisora's verification team based on experience, credentials, and community trust.</p>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {badgeInfo.map((badge) => (
                       <div key={badge.name} className={`p-4 rounded-xl border ${badge.color} ${currentBadge === badge.name ? 'ring-2 ring-primary-500/50' : ''}`}>
@@ -178,7 +178,7 @@ export const ExpertProfile = () => {
                       <li>✓ KYC verification (Aadhaar/PAN)</li>
                       <li>✓ Employment proof (offer letter / LinkedIn)</li>
                       <li>✓ Credential check (degree / certifications)</li>
-                      <li>✓ Screening interview with KIA team</li>
+                      <li>✓ Screening interview with Wisora team</li>
                       <li>✓ Community trust score (after 10+ sessions)</li>
                     </ul>
                   </div>
@@ -212,3 +212,5 @@ export const ExpertProfile = () => {
     </>
   );
 };
+
+

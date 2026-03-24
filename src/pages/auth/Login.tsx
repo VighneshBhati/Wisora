@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { Link, Navigate, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { supabase } from '@/integrations/supabase/client';
+import { signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
+import { auth, googleProvider } from '@/integrations/firebase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Eye, EyeOff, Mail, Lock, LogIn, BookOpen, Users, Award, TrendingUp } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, LogIn } from 'lucide-react';
 import type { RootState } from '@/store/store';
 import { AuthHero } from "@/components/auth/AuthHero";
 import { AuthFooter } from "@/components/auth/AuthFooter";
@@ -27,36 +28,25 @@ export const Login = () => {
     e.preventDefault();
     setLoading(true);
     setError('');
-
     try {
-      console.log('Attempting login...');
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) throw error;
-
-      console.log('Login successful, session created');
-    } catch (error: any) {
-      console.error('Login error:', error);
-      setError(error.message);
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (err: any) {
+      const msg: string = err?.message || 'Login failed';
+      if (msg.includes('user-not-found') || msg.includes('wrong-password') || msg.includes('invalid-credential'))
+        setError('Invalid email or password.');
+      else setError(msg);
     } finally {
       setLoading(false);
     }
   };
 
   const handleGoogleLogin = async () => {
+    setError('');
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`
-        }
-      });
-      if (error) throw error;
-    } catch (error: any) {
-      setError(error.message);
+      await signInWithPopup(auth, googleProvider);
+    } catch (err: any) {
+      if (!err?.message?.includes('popup-closed-by-user'))
+        setError(err?.message || 'Google sign-in failed');
     }
   };
 
@@ -74,11 +64,11 @@ export const Login = () => {
   if (isAuthenticated && user) {
     console.log('User is authenticated, redirecting...');
     const from = location.state?.from?.pathname;
-    if (from && from !== '/auth/login') {
+    if (from && from !== '/auth/login' && from !== '/auth') {
       return <Navigate to={from} replace />;
     }
-    
-    const redirectPath = user.role === 'teacher' || user.role === 'admin' ? '/teacher/dashboard' : '/student/dashboard';
+    // All roles land on personal home — they can switch modes from there
+    const redirectPath = user.role === 'admin' ? '/admin/dashboard' : '/personal/home';
     return <Navigate to={redirectPath} replace />;
   }
 

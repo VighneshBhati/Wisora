@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { SEOHead } from '@/components/seo/SEOHead';
 import { Navbar } from '@/components/layout/Navbar';
 import styled, { keyframes } from 'styled-components';
@@ -219,7 +219,7 @@ const Section = styled.section<{ delay?: string }>`
 
 const pillars = [
   { icon: '🎯', title: 'Access for All', body: 'Every student in India — regardless of college tier or city — deserves access to the same quality of guidance that IIT students get from their alumni networks.' },
-  { icon: '✅', title: 'Verified Expertise', body: 'Every expert on KIA is background-checked. We verify credentials, work history, and domain depth before anyone can take a booking.' },
+  { icon: '✅', title: 'Verified Expertise', body: 'Every expert on Wisora is background-checked. We verify credentials, work history, and domain depth before anyone can take a booking.' },
   { icon: '⚡', title: 'Real Conversations', body: 'No pre-recorded lectures. No generic advice. Just live, focused 1:1 sessions where you ask exactly what you need to know.' },
   { icon: '🏫', title: 'Institutional Impact', body: 'We partner with colleges and companies to bring expert guidance at scale — campus visits, workshops, and bulk session credits.' },
   { icon: '🌱', title: 'Expert Livelihoods', body: 'We create a dignified income stream for retired professionals and senior experts whose knowledge is invaluable but underutilised.' },
@@ -232,7 +232,7 @@ const bases = Array.from({ length: 28 });
 
 export const MissionPage = () => (
   <>
-    <SEOHead title="Our Mission | KIA — Know It All" />
+    <SEOHead title="Our Mission | Wisora" />
     <div className="min-h-screen bg-[#090a0f] text-white">
       <Navbar extraXSpacing />
 
@@ -248,7 +248,7 @@ export const MissionPage = () => (
           </span>
         </h1>
         <p className="text-white/50 text-lg max-w-2xl mx-auto leading-relaxed">
-          Millions of Indians have the drive to grow. Thousands of professionals have the answers. KIA exists to connect them — efficiently, affordably, and at scale.
+          Millions of Indians have the drive to grow. Thousands of professionals have the answers. Wisora exists to connect them — efficiently, affordably, and at scale.
         </p>
       </Section>
 
@@ -276,7 +276,7 @@ export const MissionPage = () => (
         <p className="text-white/60 text-xl max-w-3xl mx-auto leading-relaxed italic">
           "By 2030, we want every ambitious Indian to have had at least one conversation with a real expert in their field — before making a career-defining decision."
         </p>
-        <p className="text-white/30 text-sm mt-4">— Vighnesh Bhati, Founder, KIA</p>
+        <p className="text-white/30 text-sm mt-4">— Arsh Maheshwari, Founder, Wisora</p>
       </Section>
 
       {/* Pillars */}
@@ -298,3 +298,4 @@ export const MissionPage = () => (
     </div>
   </>
 );
+

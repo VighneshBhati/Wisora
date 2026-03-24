@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { auth } from "@/integrations/firebase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Clock, Zap, BookOpen, Brain, Target } from 'lucide-react';
@@ -33,27 +34,27 @@ export const StudentActivity = ({ stats }: StudentActivityProps) => {
     const fetchActivities = async () => {
       setLoading(true);
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const user = auth.currentUser;
         if (!user) return;
         // Fetch recent lessons completed
         const { data: lessonProgress } = await supabase
           .from('lesson_progress')
           .select('lesson_id, completed_at, lessons(title, course_id)')
-          .eq('student_id', user.id)
+          .eq('student_id', user.uid)
           .order('completed_at', { ascending: false })
           .limit(5);
         // Fetch recent quiz attempts
         const { data: quizAttempts } = await supabase
           .from('quiz_attempts')
           .select('quiz_id, started_at, score, quizzes(title, course_id)')
-          .eq('student_id', user.id)
+          .eq('student_id', user.uid)
           .order('started_at', { ascending: false })
           .limit(5);
         // Fetch recent enrollments
         const { data: enrollments } = await supabase
           .from('enrollments')
           .select('id, enrolled_at, course:courses(title, category)')
-          .eq('student_id', user.id)
+          .eq('student_id', user.uid)
           .order('enrolled_at', { ascending: false })
           .limit(5);
         // Build activity list
@@ -131,7 +132,7 @@ export const StudentActivity = ({ stats }: StudentActivityProps) => {
           </div>
           <div className="flex-1 min-w-0">
             <div className="gradient-text text-lg sm:text-xl font-bold">Recent Activity</div>
-            <CardDescription className="text-muted-foreground/80 text-xs sm:text-sm">Your latest actions on KIA</CardDescription>
+            <CardDescription className="text-muted-foreground/80 text-xs sm:text-sm">Your latest actions on Wisora</CardDescription>
           </div>
         </div>
       </CardHeader>
@@ -189,3 +190,4 @@ export const StudentActivity = ({ stats }: StudentActivityProps) => {
     </Card>
   );
 };
+

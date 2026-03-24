@@ -64,7 +64,7 @@ export const GroupChat = ({ groupId, onBack }: GroupChatProps) => {
   };
 
   const getCurrentUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = auth.currentUser;
     setCurrentUser(user);
   };
 

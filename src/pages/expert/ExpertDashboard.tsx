@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
@@ -96,7 +96,7 @@ export const ExpertDashboard = () => {
 
   return (
     <>
-      <SEOHead title="Expert Dashboard | KIA" />
+      <SEOHead title="Expert Dashboard | Wisora" />
       <DashboardLayout>
         <div className="relative space-y-8">
 
@@ -329,3 +329,4 @@ export const ExpertDashboard = () => {
     </>
   );
 };
+

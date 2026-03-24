@@ -3,6 +3,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import Plyr from 'plyr';
 import 'plyr/dist/plyr.css';
 import { supabase } from '@/integrations/supabase/client';
+import { auth } from '@/integrations/firebase/client';
+import { getIdToken } from 'firebase/auth';
 import { Loader2, AlertCircle, Play } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import type { RootState } from '@/store/store';
@@ -293,10 +295,11 @@ export const SecureVideoPlayer: React.FC<SecureVideoPlayerProps> = ({ lessonId, 
         setError(null);
 
         // Get auth token
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
+        const firebaseUser = auth.currentUser;
+        if (!firebaseUser) {
           throw new Error('User not authenticated');
         }
+        const idToken = await getIdToken(firebaseUser);
 
         console.log('Fetching video ID for lesson:', lessonId);
 
@@ -304,7 +307,7 @@ export const SecureVideoPlayer: React.FC<SecureVideoPlayerProps> = ({ lessonId, 
         const { data, error: functionError } = await supabase.functions.invoke('get-video-id', {
           body: { lessonId },
           headers: {
-            Authorization: `Bearer ${session.access_token}`,
+            Authorization: `Bearer ${idToken}`,
           },
         });
 

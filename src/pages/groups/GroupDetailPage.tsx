@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { auth } from "@/integrations/firebase/client";
 import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { supabase } from '@/integrations/supabase/client';
@@ -154,14 +155,14 @@ export const GroupDetailPage = () => {
       return;
     }
 
-    console.log('Setting up real-time subscription for group:', groupId, 'user:', user.id);
+    console.log('Setting up real-time subscription for group:', groupId, 'user:', user.uid);
     
     // Set up real-time subscription with better configuration
     const channel = supabase
       .channel(`group-${groupId}`, {
         config: {
           broadcast: { self: false },
-          presence: { key: user.id }
+          presence: { key: user.uid }
         }
       })
       .on(
@@ -180,7 +181,7 @@ export const GroupDetailPage = () => {
             console.log('Processing new message:', newMessage);
 
             // Skip if it's our own message (to avoid duplicates with optimistic updates)
-            if (newMessage.user_id === user.id) {
+            if (newMessage.user_id === user.uid) {
               console.log('Skipping own message to avoid duplicate');
               return;
             }
@@ -326,14 +327,14 @@ export const GroupDetailPage = () => {
     const messageContent = newMessage.trim();
     const optimisticId = `optimistic-${Date.now()}-${Math.random()}`;
     
-    console.log('Sending message:', { groupId, userId: user.id, content: messageContent });
+    console.log('Sending message:', { groupId, userId: user.uid, content: messageContent });
     
     // Create optimistic message
     const optimisticMessage: Message = {
       id: optimisticId,
       content: messageContent,
       created_at: new Date().toISOString(),
-      user_id: user.id,
+      user_id: user.uid,
       author_name: user.full_name || user.email,
       author_email: user.email,
       isOptimistic: true
@@ -348,7 +349,7 @@ export const GroupDetailPage = () => {
         .from('group_messages')
         .insert({
           group_id: groupId,
-          user_id: user.id,
+          user_id: user.uid,
           content: messageContent
         })
         .select()
@@ -414,8 +415,8 @@ export const GroupDetailPage = () => {
       console.log('Fetching group with ID:', groupId);
 
       // Get current user
-      const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
-      console.log('Auth check result:', { currentUser: currentUser?.id, userError });
+      const currentUser = auth.currentUser; const userError = null;
+      console.log('Auth check result:', { currentUser: currentUser?.uid, userError });
       
       if (userError) {
         console.error('Auth error:', userError);
@@ -429,13 +430,13 @@ export const GroupDetailPage = () => {
         return;
       }
 
-      console.log('Authenticated user ID:', currentUser.id);
+      console.log('Authenticated user ID:', currentUser.uid);
 
       // Get user role
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('role')
-        .eq('id', currentUser.id)
+        .eq('id', currentUser.uid)
         .single();
 
       if (profileError) {
@@ -478,7 +479,7 @@ export const GroupDetailPage = () => {
       validateWithCreatorId(groupData.created_by);
       
       setGroup(groupData);
-      setIsOwner(groupData.created_by === currentUser.id);
+      setIsOwner(groupData.created_by === currentUser.uid);
       setGroupSettings({
         name: groupData.name,
         description: groupData.description || '',
@@ -545,8 +546,8 @@ export const GroupDetailPage = () => {
 
       console.log('Final formatted members:', formattedMembers);
       setMembers(formattedMembers);
-      setIsMember(formattedMembers.some(m => m.student_id === currentUser.id));
-      console.log('User is member:', formattedMembers.some(m => m.student_id === currentUser.id));
+      setIsMember(formattedMembers.some(m => m.student_id === currentUser.uid));
+      console.log('User is member:', formattedMembers.some(m => m.student_id === currentUser.uid));
 
     } catch (error: any) {
       console.error('Error in fetchGroupDetails:', error);
@@ -571,8 +572,8 @@ export const GroupDetailPage = () => {
       console.log('Fetching group with code:', joinCode);
 
       // Get current user
-      const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
-      console.log('Auth check result:', { currentUser: currentUser?.id, userError });
+      const currentUser = auth.currentUser; const userError = null;
+      console.log('Auth check result:', { currentUser: currentUser?.uid, userError });
       
       if (userError) {
         console.error('Auth error:', userError);
@@ -586,13 +587,13 @@ export const GroupDetailPage = () => {
         return;
       }
 
-      console.log('Authenticated user ID:', currentUser.id);
+      console.log('Authenticated user ID:', currentUser.uid);
 
       // Get user role
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('role')
-        .eq('id', currentUser.id)
+        .eq('id', currentUser.uid)
         .single();
 
       if (profileError) {
@@ -631,7 +632,7 @@ export const GroupDetailPage = () => {
       validateWithCreatorId(groupData.created_by);
       
       setGroup(groupData);
-      setIsOwner(groupData.created_by === currentUser.id);
+      setIsOwner(groupData.created_by === currentUser.uid);
       setGroupSettings({
         name: groupData.name,
         description: groupData.description || '',
@@ -704,8 +705,8 @@ export const GroupDetailPage = () => {
 
       console.log('Final formatted members:', formattedMembers);
       setMembers(formattedMembers);
-      setIsMember(formattedMembers.some(m => m.student_id === currentUser.id));
-      console.log('User is member:', formattedMembers.some(m => m.student_id === currentUser.id));
+      setIsMember(formattedMembers.some(m => m.student_id === currentUser.uid));
+      console.log('User is member:', formattedMembers.some(m => m.student_id === currentUser.uid));
 
       // Fetch messages after setting up the group
       await fetchMessages();
@@ -911,14 +912,14 @@ export const GroupDetailPage = () => {
 
   const handleLeaveGroup = async () => {
     try {
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      const currentUser = auth.currentUser;
       if (!currentUser) return;
 
       const { error } = await supabase
         .from('group_members')
         .delete()
         .eq('group_id', groupId)
-        .eq('student_id', currentUser.id);
+        .eq('student_id', currentUser.uid);
 
       if (error) throw error;
 

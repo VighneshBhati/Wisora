@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { auth } from "@/integrations/firebase/client";
 import { z } from "zod";
 import { 
   StudentQueryParamsSchema,
@@ -77,14 +78,14 @@ export function validateFilter(filter: unknown): StudentFilter {
  * Validates user authentication
  */
 export async function validateUser(): Promise<{ id: string; email: string }> {
-  const { data: { user }, error } = await supabase.auth.getUser();
+  const user = auth.currentUser;
   
-  if (error || !user) {
+  if (!user) {
     throw new Error("User not authenticated");
   }
   
   return {
-    id: user.id,
+    id: user.uid,
     email: user.email || '',
   };
 }

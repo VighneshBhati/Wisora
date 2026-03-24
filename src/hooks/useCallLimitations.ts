@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { auth } from "@/integrations/firebase/client";
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -30,7 +31,7 @@ export const useCallLimitations = (lessonId: string) => {
 
   const fetchCallLimitations = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       if (!user) {
         setData(prev => ({ ...prev, loading: false, canStartCall: false }));
         return;
@@ -40,7 +41,7 @@ export const useCallLimitations = (lessonId: string) => {
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('minutes')
-        .eq('id', user.id)
+        .eq('id', user.uid)
         .single();
 
       if (profileError) {
@@ -67,7 +68,7 @@ export const useCallLimitations = (lessonId: string) => {
       const { data: callHistory, error: historyError } = await supabase
         .from('student_call_history')
         .select('call_duration_minutes')
-        .eq('student_id', user.id)
+        .eq('student_id', user.uid)
         .eq('call_date', today);
 
       if (historyError) {
@@ -99,7 +100,7 @@ export const useCallLimitations = (lessonId: string) => {
 
   const recordCallStart = async (lessonId: string) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       if (!user) return null;
 
       // Check if the lessonId exists in the lessons table
@@ -111,7 +112,7 @@ export const useCallLimitations = (lessonId: string) => {
 
       // Prepare insert data
       const insertData: any = {
-        student_id: user.id,
+        student_id: user.uid,
         call_started_at: new Date().toISOString(),
         call_date: new Date().toISOString().split('T')[0]
       };
@@ -142,7 +143,7 @@ export const useCallLimitations = (lessonId: string) => {
 
   const recordCallEnd = async (callId: string, durationMinutes: number) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       if (!user) return false;
 
       // Update call history
@@ -163,7 +164,7 @@ export const useCallLimitations = (lessonId: string) => {
       const { data: profileData } = await supabase
         .from('profiles')
         .select('minutes')
-        .eq('id', user.id)
+        .eq('id', user.uid)
         .single();
 
       const currentPurchasedMinutes = profileData?.minutes || 0;
@@ -173,7 +174,7 @@ export const useCallLimitations = (lessonId: string) => {
       const { data: todayCalls } = await supabase
         .from('student_call_history')
         .select('call_duration_minutes')
-        .eq('student_id', user.id)
+        .eq('student_id', user.uid)
         .eq('call_date', today);
 
       const totalUsedToday = todayCalls?.reduce((total, call) => total + call.call_duration_minutes, 0) || 0;
@@ -188,7 +189,7 @@ export const useCallLimitations = (lessonId: string) => {
           .update({ 
             minutes: Math.max(0, currentPurchasedMinutes - minutesToConsume) 
           })
-          .eq('id', user.id);
+          .eq('id', user.uid);
 
         if (updateError) {
           console.error('Error updating purchased minutes:', updateError);
@@ -207,7 +208,7 @@ export const useCallLimitations = (lessonId: string) => {
 
   const updateCallDuration = async (callId: string, durationMinutes: number) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       if (!user) return false;
 
       const { error } = await supabase

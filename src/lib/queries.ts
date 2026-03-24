@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { auth } from "@/integrations/firebase/client";
 import { useQuery } from "@tanstack/react-query";
 import { User } from "@supabase/supabase-js";
 import { getStudyStreak } from "@/utils/streakCalculator";
@@ -31,7 +32,7 @@ interface EnrolledCourse {
 }
 
 export const getTeacherCourses = async () => {
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = auth.currentUser;
   if (!user) throw new Error("User not authenticated");
 
   const { data: coursesData, error } = await supabase
@@ -40,7 +41,7 @@ export const getTeacherCourses = async () => {
       *,
       enrollments(count)
     `)
-    .eq('instructor_id', user.id)
+    .eq('instructor_id', user.uid)
     .order('created_at', { ascending: false });
 
   if (error) throw error;
@@ -55,13 +56,13 @@ export const useTeacherCourses = () => {
 };
 
 export const getTeacherChapters = async () => {
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = auth.currentUser;
   if (!user) throw new Error("User not authenticated");
 
   const { data: chaptersData, error } = await supabase
     .from('chapters')
     .select('*')
-    .eq('instructor_id', user.id)
+    .eq('instructor_id', user.uid)
     .order('created_at', { ascending: false });
 
   if (error) throw error;
@@ -72,7 +73,7 @@ export const getTeacherChapters = async () => {
         .from('courses')
         .select('*', { count: 'exact', head: true })
         .eq('chapter_id', chapter.id)
-        .eq('instructor_id', user.id);
+        .eq('instructor_id', user.uid);
 
       const { count: enrollmentCount } = await supabase
         .from('chapter_enrollments')
@@ -97,13 +98,13 @@ export const useTeacherChapters = () => {
 };
 
 export const getTeacherGroups = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = auth.currentUser;
     if (!user) throw new Error("User not authenticated");
 
     const { data: groupsData, error: groupsError } = await supabase
         .from('groups')
         .select('*')
-        .eq('created_by', user.id)
+        .eq('created_by', user.uid)
         .order('created_at', { ascending: false });
 
     if (groupsError) throw groupsError;
@@ -133,7 +134,7 @@ export const useTeacherGroups = () => {
 };
 
 export const getTeacherStudents = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = auth.currentUser;
     if (!user) throw new Error("User not authenticated");
 
     const { data: enrollmentsData, error: enrollmentsError } = await supabase
@@ -148,7 +149,7 @@ export const getTeacherStudents = async () => {
             instructor_id
           )
         `)
-        .eq('course.instructor_id', user.id);
+        .eq('course.instructor_id', user.uid);
 
     if (enrollmentsError) throw enrollmentsError;
 
@@ -234,7 +235,7 @@ export const useTeacherStudents = () => {
 };
 
 export const getTeacherDashboardData = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = auth.currentUser;
     if (!user) throw new Error("User not authenticated");
 
     // Fetch courses with enrollment count
@@ -244,7 +245,7 @@ export const getTeacherDashboardData = async () => {
           *,
           enrollments(count)
         `)
-        .eq('instructor_id', user.id)
+        .eq('instructor_id', user.uid)
         .order('created_at', { ascending: false });
 
     if (coursesError) throw coursesError;
@@ -357,13 +358,13 @@ export const useTeacherDashboardData = () => {
 };
 
 export const getTeacherTasks = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = auth.currentUser;
     if (!user) throw new Error("User not authenticated");
 
     const { data: tasksData, error } = await supabase
         .from('teacher_schedule_tasks')
         .select('*')
-        .eq('teacher_id', user.id)
+        .eq('teacher_id', user.uid)
         .order('due_date', { ascending: true })
         .limit(5);
 
@@ -431,14 +432,14 @@ export const useMultiplayerQuizCategories = (userId: string) => {
 };
 
 export const fetchTeacherAnalytics = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = auth.currentUser;
     if (!user) throw new Error('Not authenticated');
 
     // Fetch courses taught by this teacher
     const { data: courses } = await supabase
         .from('courses')
         .select('id, title, price, created_at')
-        .eq('instructor_id', user.id);
+        .eq('instructor_id', user.uid);
 
     const courseIds = courses?.map(c => c.id) || [];
 
@@ -621,7 +622,7 @@ export const fetchStudentEnrolledCourses = async (user: User | null, teacher: Te
                 profiles!courses_instructor_id_fkey(full_name)
             )
         `)
-        .eq('student_id', user.id)
+        .eq('student_id', user.uid)
         .order('enrolled_at', { ascending: false });
 
     if (teacher) {
@@ -668,7 +669,7 @@ export const fetchStudentEnrolledCourses = async (user: User | null, teacher: Te
                 const { count: completedLessons } = await supabase
                     .from('lesson_progress')
                     .select('*', { count: 'exact', head: true })
-                    .eq('student_id', user.id)
+                    .eq('student_id', user.uid)
                     .in('lesson_id', lessonIds);
 
                 const { count: enrollmentCount } = await supabase
@@ -710,7 +711,7 @@ export const fetchStudentGroups = async (user: User | null, teacher: Teacher | n
     const { data: memberData, error: memberError } = await supabase
         .from('group_members')
         .select('group_id')
-        .eq('student_id', user.id);
+        .eq('student_id', user.uid);
     if (memberError) throw memberError;
     const groupIds = memberData?.map(m => m.group_id) || [];
 
@@ -782,7 +783,7 @@ export const fetchStudentEnrolledChapters = async (user, teacher) => {
                 cover_image_url
             )
         `)
-        .eq('student_id', user.id)
+        .eq('student_id', user.uid)
         .order('enrolled_at', { ascending: false });
 
     if (enrollmentsError) throw enrollmentsError;
@@ -838,7 +839,7 @@ export const fetchStudentEnrolledChapters = async (user, teacher) => {
                 const { count } = await supabase
                     .from('enrollments')
                     .select('*', { count: 'exact', head: true })
-                    .eq('student_id', user.id)
+                    .eq('student_id', user.uid)
                     .in('course_id', courseIds);
                 enrolledCourses = count || 0;
             }
@@ -867,7 +868,7 @@ export const fetchStudentTransactionsAndWallet = async (user) => {
     const { data: transactions, error: transactionsError } = await supabase
         .from('wallet_transactions')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', user.uid)
         .order('created_at', { ascending: false });
 
     if (transactionsError) throw transactionsError;
@@ -875,7 +876,7 @@ export const fetchStudentTransactionsAndWallet = async (user) => {
     const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('wallet')
-        .eq('id', user.id)
+        .eq('id', user.uid)
         .single();
 
     if (profileError) throw profileError;
@@ -951,7 +952,7 @@ export const fetchStudentDashboardData = async (user, teacher) => {
                 cover_image_url
             )
         `)
-        .eq('student_id', user.id)
+        .eq('student_id', user.uid)
         .order('enrolled_at', { ascending: false });
 
     if (teacher) {
@@ -997,7 +998,7 @@ export const fetchStudentDashboardData = async (user, teacher) => {
                 const { count: completedLessons } = await supabase
                     .from('lesson_progress')
                     .select('*', { count: 'exact', head: true })
-                    .eq('student_id', user.id)
+                    .eq('student_id', user.uid)
                     .in('lesson_id', lessonIds);
 
                 const progress = totalLessons ? Math.round((completedLessons || 0) / totalLessons * 100) : 0;
@@ -1024,7 +1025,7 @@ export const fetchStudentDashboardData = async (user, teacher) => {
     const { data: quizAttempts } = await supabase
         .from('quiz_attempts')
         .select('score, max_score')
-        .eq('student_id', user.id);
+        .eq('student_id', user.uid);
 
     const avgQuizScore = quizAttempts && quizAttempts.length > 0
         ? Math.round(quizAttempts.reduce((sum, attempt) =>
@@ -1033,7 +1034,7 @@ export const fetchStudentDashboardData = async (user, teacher) => {
         : 0;
 
     // Calculate study streak
-    const studyStreak = await getStudyStreak(user.id);
+    const studyStreak = await getStudyStreak(user.uid);
 
     const stats = {
         totalCourses: coursesWithProgress.length,

@@ -44,7 +44,7 @@ export const SparkLoader: React.FC<SparkLoaderProps> = ({
             background: color,
             borderRadius: "50%",
             boxShadow: `0 0 ${size / 2}px ${color}66, 0 0 ${size / 4}px ${color}99`,
-            animation: "spark-bounce-updown 1.2s cubic-bezier(.7,0,.3,1) infinite"
+            animation: "spark-bounce-updown 0.7s cubic-bezier(.7,0,.3,1) infinite"
           }}
         />
       </div>
@@ -52,7 +52,7 @@ export const SparkLoader: React.FC<SparkLoaderProps> = ({
         className={`text-lg font-medium tracking-wide ${textClassName}`}
         style={{
           color: color,
-          animation: "spark-text-fade 1.2s cubic-bezier(.7,0,.3,1) infinite"
+          animation: "spark-text-fade 0.7s cubic-bezier(.7,0,.3,1) infinite"
         }}
       >
         {text}

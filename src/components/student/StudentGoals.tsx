@@ -1,4 +1,4 @@
-
+﻿
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,7 +33,7 @@ export const StudentGoals = ({ stats }: StudentGoalsProps) => {
     {
       id: '1',
       title: 'Complete 5 Expert Sessions',
-      description: 'Book and complete 5 sessions with KIA verified experts',
+      description: 'Book and complete 5 sessions with Wisora verified experts',
       target: 5,
       current: stats.completedCourses,
       type: 'courses',
@@ -43,7 +43,7 @@ export const StudentGoals = ({ stats }: StudentGoalsProps) => {
     {
       id: '2',
       title: '30-Day Engagement Streak',
-      description: 'Stay active on KIA for 30 consecutive days',
+      description: 'Stay active on Wisora for 30 consecutive days',
       target: 30,
       current: stats.studyStreak || 0,
       type: 'streak',
@@ -97,7 +97,7 @@ export const StudentGoals = ({ stats }: StudentGoalsProps) => {
           </div>
           <div className="flex-1 min-w-0">
             <div className="gradient-text text-lg sm:text-xl font-bold">My Goals</div>
-            <CardDescription className="text-muted-foreground/80 text-xs sm:text-sm">Track your KIA journey milestones</CardDescription>
+            <CardDescription className="text-muted-foreground/80 text-xs sm:text-sm">Track your Wisora journey milestones</CardDescription>
           </div>
           <Button size="sm" className="btn-secondary ml-auto w-full sm:w-auto">
             <Plus className="h-4 w-4 mr-2" />
@@ -187,3 +187,5 @@ export const StudentGoals = ({ stats }: StudentGoalsProps) => {
     </Card>
   );
 };
+
+

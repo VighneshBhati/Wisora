@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+﻿import React, { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 
 // Product Showcase Component
@@ -65,7 +65,7 @@ const ProductShowcase: React.FC = () => {
         </div>
 
         <div className="text-center text-lg mb-8 md:text-xl text-black">
-          Every expert on KIA is background-checked, KYC-verified, and screened through a live interview. 
+          Every expert on Wisora is background-checked, KYC-verified, and screened through a live interview. 
           No fake mentors. No random motivational speakers. Only verified professionals.
         </div>
       </div>
@@ -124,3 +124,4 @@ const ProductShowcase: React.FC = () => {
 };
 
 export default ProductShowcase;
+

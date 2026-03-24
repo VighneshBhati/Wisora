@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { MdOutlineArrowOutward } from 'react-icons/md';
@@ -90,7 +90,7 @@ const Footer: React.FC = () => {
               className={`cursor-pointer ${teacher && slug ? 'h-8 w-8' : 'h-12 w-12'}`}
             />
             <a 
-              href="https://kia.in" 
+              href="https://wisora.in" 
               target="_blank" 
               rel="noopener noreferrer"
               className={`text-white font-semibold hover:opacity-80 transition-opacity ${teacher && slug ? 'text-lg' : 'text-2xl'}`}
@@ -101,8 +101,8 @@ const Footer: React.FC = () => {
           <div>
             India's expert guidance platform — verified professionals, real answers.{" "}
             <div className="font-semibold text-white hover:underline text-lg">
-              <a href="https://kia.in">
-                KIA — Know It All <MdOutlineArrowOutward className="inline" />
+              <a href="https://wisora.in">
+                Wisora <MdOutlineArrowOutward className="inline" />
               </a>
             </div>
           </div>
@@ -159,3 +159,4 @@ const Footer: React.FC = () => {
 };
 
 export default Footer;
+

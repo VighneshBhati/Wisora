@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SEOHead } from '@/components/seo/SEOHead';
+import { useToast } from '@/hooks/use-toast';
 import { 
   Video, MapPin, Calendar, Clock, Users, Star, 
   CreditCard, Building, CheckCircle, ArrowRight
@@ -25,6 +26,7 @@ const badgeColors: Record<string, string> = {
 };
 
 const CampusVisitForm = () => {
+  const { toast } = useToast();
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({
     expert: '', date: '', duration: '2hrs', location: '', room: '', students: '', sessionType: 'workshop'
@@ -156,10 +158,14 @@ const CampusVisitForm = () => {
           </Card>
           <div className="flex gap-2">
             <Button variant="outline" className="border-white/10" onClick={() => setStep(2)}>Back</Button>
-            <Button className="flex-1 bg-primary-500 hover:bg-primary-600 text-white">
+            <Button className="flex-1 bg-primary-500 hover:bg-primary-600 text-white" onClick={() => {
+              toast({ title: '✅ Visit Request Submitted', description: 'Your campus visit request has been sent to the expert for confirmation.' });
+              setStep(1);
+              setForm({ expert: '', date: '', duration: '2hrs', location: '', room: '', students: '', sessionType: 'workshop' });
+            }}>
               <CheckCircle className="h-4 w-4 mr-2" /> Request Visit
             </Button>
-            <Button variant="outline" className="border-white/10">Negotiate Time</Button>
+            <Button variant="outline" className="border-white/10" onClick={() => toast({ title: '💬 Negotiation Request Sent', description: 'The expert will contact you to discuss a suitable time.' })}>Negotiate Time</Button>
           </div>
         </div>
       )}
@@ -169,10 +175,11 @@ const CampusVisitForm = () => {
 
 export const InstitutionalExpertBooking = () => {
   const [mode, setMode] = useState<'online' | 'campus'>('online');
+  const { toast } = useToast();
 
   return (
     <>
-      <SEOHead title="Expert Booking | KIA Institutional" />
+      <SEOHead title="Expert Booking | Wisora Institutional" />
       <DashboardLayout>
         <div className="space-y-6">
           <div>
@@ -215,7 +222,8 @@ export const InstitutionalExpertBooking = () => {
                         <CreditCard className="h-3 w-3 text-primary-400" />
                         <span className="text-primary-400 font-semibold">{expert.onlineCredits} credits/session</span>
                       </div>
-                      <Button size="sm" className="w-full bg-primary-500/20 hover:bg-primary-500/30 text-primary-400 border border-primary-500/30 text-xs">
+                      <Button size="sm" className="w-full bg-primary-500/20 hover:bg-primary-500/30 text-primary-400 border border-primary-500/30 text-xs"
+                        onClick={() => toast({ title: '💳 Payment Gateway', description: 'Payment Gateway Under Development.' })}>
                         Use Credits & Book
                       </Button>
                     </CardContent>
@@ -240,3 +248,4 @@ export const InstitutionalExpertBooking = () => {
     </>
   );
 };
+

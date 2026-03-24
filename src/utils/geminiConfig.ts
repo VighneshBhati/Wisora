@@ -550,8 +550,8 @@ const fetchOpenRouter = async (messages: AIMessage[], options: { model: string; 
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${apiKey}`,
-      'HTTP-Referer': 'https://kia-platform.app',
-      'X-Title': 'KIA',
+      'HTTP-Referer': 'https://wisora.in',
+      'X-Title': 'Wisora',
       'Content-Type': 'application/json'
     },
     body: JSON.stringify(body)

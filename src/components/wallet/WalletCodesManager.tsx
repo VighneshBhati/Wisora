@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { auth } from "@/integrations/firebase/client";
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -60,7 +61,7 @@ export const WalletCodesManager: React.FC<WalletCodesManagerProps> = ({ searchTe
     setCreating(true);
     
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       if (!user) throw new Error('User not authenticated');
 
       // Generate the code using the database function
@@ -78,7 +79,7 @@ export const WalletCodesManager: React.FC<WalletCodesManagerProps> = ({ searchTe
       const codeData = {
         code: generatedCode,
         amount: parseInt(newCode.amount),
-        created_by: user.id
+        created_by: user.uid
       };
 
       const { error } = await supabase

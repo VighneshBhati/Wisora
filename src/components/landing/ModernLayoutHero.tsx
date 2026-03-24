@@ -25,6 +25,8 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { supabase } from '@/integrations/supabase/client';
+import { auth } from '@/integrations/firebase/client';
+import { signOut } from 'firebase/auth';
 import WalletCard from '@/components/student/WalletCardDesign';
 import { PLATFORM_NAME } from '@/data/constants';
 
@@ -401,7 +403,7 @@ const ModernLayoutHero: React.FC = () => {
                       <DropdownMenuSeparator />
                       <DropdownMenuItem asChild>
                         <button
-                          onClick={() => { supabase.auth.signOut(); navigate('/'); }}
+                          onClick={() => { signOut(auth); navigate('/'); }}
                           className="w-full mt-2 flex items-center gap-2 text-destructive font-semibold py-2 px-2 rounded hover:bg-destructive/10 transition"
                         >
                           <LogOut className="h-4 w-4" />

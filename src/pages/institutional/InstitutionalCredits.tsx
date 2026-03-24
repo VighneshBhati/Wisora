@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { SEOHead } from '@/components/seo/SEOHead';
+import { useToast } from '@/hooks/use-toast';
 import { CreditCard, TrendingUp, TrendingDown, Plus, Zap, Users, MapPin, Calendar } from 'lucide-react';
 
 const creditPacks = [
@@ -23,10 +24,25 @@ const transactions = [
 
 export const InstitutionalCredits = () => {
   const [balance] = useState(1840);
+  const { toast } = useToast();
+
+  const handlePurchase = (pack: { label: string; price: number; credits: number; bonus: number }) => {
+    toast({
+      title: '🚧 Payment Gateway Under Development',
+      description: `${pack.label} (${pack.credits + pack.bonus} credits for ₹${pack.price.toLocaleString()}) will be available soon!`,
+    });
+  };
+
+  const handleAddCredits = () => {
+    toast({
+      title: '🚧 Payment Gateway Under Development',
+      description: 'Credit top-up via payment gateway is coming soon. Stay tuned!',
+    });
+  };
 
   return (
     <>
-      <SEOHead title="Credits System | KIA Institutional" />
+      <SEOHead title="Credits System | Wisora Institutional" />
       <DashboardLayout>
         <div className="space-y-8">
           <div>
@@ -47,7 +63,7 @@ export const InstitutionalCredits = () => {
                   <p className="text-sm text-muted-foreground mt-2">≈ {Math.floor(balance / 8)} online sessions or {Math.floor(balance / 60)} full-day campus visits</p>
                 </div>
                 <div className="text-right space-y-2">
-                  <Button className="bg-primary-500 hover:bg-primary-600 text-white w-full">
+                  <Button className="bg-primary-500 hover:bg-primary-600 text-white w-full" onClick={handleAddCredits}>
                     <Plus className="h-4 w-4 mr-2" /> Add Credits
                   </Button>
                   <p className="text-xs text-muted-foreground">1 credit ≈ ₹25 value</p>
@@ -92,7 +108,7 @@ export const InstitutionalCredits = () => {
                     </div>
                     <div className="font-bold text-sm mb-1">{pack.label}</div>
                     <div className="text-xl font-black mb-4">₹{pack.price.toLocaleString()}</div>
-                    <Button size="sm" className="w-full bg-primary-500/20 hover:bg-primary-500/30 text-primary-400 border border-primary-500/30">
+                    <Button size="sm" className="w-full bg-primary-500/20 hover:bg-primary-500/30 text-primary-400 border border-primary-500/30" onClick={() => handlePurchase(pack)}>
                       Purchase
                     </Button>
                   </CardContent>
@@ -132,3 +148,4 @@ export const InstitutionalCredits = () => {
     </>
   );
 };
+

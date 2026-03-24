@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { auth } from "@/integrations/firebase/client";
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -109,8 +110,8 @@ export const CourseView = () => {
 
   useEffect(() => {
     async function fetchUser() {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUserId(user?.id);
+      const user = auth.currentUser;
+      setUserId(user?.uid);
     }
     fetchUser();
   }, []);
@@ -153,13 +154,13 @@ export const CourseView = () => {
       }
 
       // Check enrollment
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       if (user) {
         const { data: enrollment } = await supabase
           .from('enrollments')
           .select('*')
           .eq('course_id', id)
-          .eq('student_id', user.id)
+          .eq('student_id', user.uid)
           .maybeSingle();
 
         setIsEnrolled(!!enrollment);
@@ -197,12 +198,12 @@ export const CourseView = () => {
 
   const fetchUserWallet = useCallback(async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       if (user) {
         const { data: profile } = await supabase
           .from('profiles')
           .select('wallet')
-          .eq('id', user.id)
+          .eq('id', user.uid)
           .single();
         
         if (profile) {

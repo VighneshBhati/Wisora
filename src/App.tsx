@@ -103,6 +103,7 @@ import TeacherSchedulePage from './pages/teacher/TeacherSchedulePage';
 import { TeacherColorSettings } from './pages/teacher/TeacherColorSettings';
 import { TeacherInvoicesPage } from './pages/teacher/TeacherInvoicesPage';
 import { LanguageProvider } from './contexts/LanguageContext';
+import { ExpertsPage } from './pages/ExpertsPage';
 import InvoiceDetailPage from "./pages/InvoiceDetailPage";
 
 
@@ -235,7 +236,7 @@ const AppRoutes = () => {
           <Route path="/expert/earnings" element={<ProtectedRoute><ExpertEarnings /></ProtectedRoute>} />
           <Route path="/expert/profile" element={<ProtectedRoute><ExpertProfile /></ProtectedRoute>} />
           {/* Teacher Routes */}
-          <Route path="/teacher/dashboard" element={<ProtectedRoute requiredRole={['teacher']}><ExpertDashboard /></ProtectedRoute>} />
+          <Route path="/teacher/dashboard" element={<ProtectedRoute><ExpertDashboard /></ProtectedRoute>} />
           <Route path="/teacher/courses" element={<ProtectedRoute requiredRole={['teacher']}><TeacherCoursesPage /></ProtectedRoute>} />
           <Route path="/teacher/courses/:id" element={<ProtectedRoute requiredRole={['teacher']}><CourseDetails /></ProtectedRoute>} />
           <Route path="/teacher/courses/:id/manage" element={<ProtectedRoute requiredRole={['teacher']}><TeacherCourseManagement /></ProtectedRoute>} />
@@ -259,13 +260,13 @@ const AppRoutes = () => {
           <Route path="/teacher/students/:studentId" element={<ProtectedRoute requiredRole={['teacher']}><StudentDetail /></ProtectedRoute>} />
           <Route path="/teacher/multiplayer-quiz" element={<ProtectedRoute requiredRole={['teacher']}><MultiplayerQuizManagement /></ProtectedRoute>} />
           <Route path="/dashboard/settings" element={<ProtectedRoute><DashboardSettingsPage /></ProtectedRoute>} />
-          {/* Student Routes */}
-          <Route path="/student/dashboard" element={<ProtectedRoute requiredRole={['student']}><PersonalHome /></ProtectedRoute>} />
-          <Route path="/student/courses" element={<ProtectedRoute requiredRole={['student']}><StudentCoursesPage /></ProtectedRoute>} />
-          <Route path="/student/chapters" element={<ProtectedRoute requiredRole={['student']}><StudentChaptersPage /></ProtectedRoute>} />
-          <Route path="/student/groups" element={<ProtectedRoute requiredRole={['student']}><StudentGroups /></ProtectedRoute>} />
-          <Route path="/student/transactions" element={<ProtectedRoute requiredRole={['student']}><StudentTransactions /></ProtectedRoute>} />
-          <Route path="/multiplayer-quiz" element={<ProtectedRoute requiredRole={['student']}><MultiplayerQuiz /></ProtectedRoute>} />
+          {/* Student Routes - accessible to all authenticated users */}
+          <Route path="/student/dashboard" element={<ProtectedRoute><PersonalHome /></ProtectedRoute>} />
+          <Route path="/student/courses" element={<ProtectedRoute><StudentCoursesPage /></ProtectedRoute>} />
+          <Route path="/student/chapters" element={<ProtectedRoute><StudentChaptersPage /></ProtectedRoute>} />
+          <Route path="/student/groups" element={<ProtectedRoute><StudentGroups /></ProtectedRoute>} />
+          <Route path="/student/transactions" element={<ProtectedRoute><StudentTransactions /></ProtectedRoute>} />
+          <Route path="/multiplayer-quiz" element={<ProtectedRoute><MultiplayerQuiz /></ProtectedRoute>} />
           <Route path="/courses" element={<Courses />} />
           <Route path="/courses/:id" element={<CourseView />} />
           <Route path="/courses/:id/progress" element={<ProtectedRoute><CourseProgress /></ProtectedRoute>} />
@@ -275,8 +276,8 @@ const AppRoutes = () => {
           <Route path="/courses/:id/progress/quiz/:quizId/attempt/:attemptId" element={<ProtectedRoute><CourseProgress /></ProtectedRoute>} />
           <Route path="/chapters" element={<ChaptersPage />} />
           <Route path="/chapters/:id" element={<ChapterDetailPage />} />
-          <Route path="/student/notifications" element={<ProtectedRoute requiredRole={['student']}><StudentNotificationsPage /></ProtectedRoute>} />
-          <Route path="/student/store" element={<ProtectedRoute requiredRole={['student']}><Store /></ProtectedRoute>} />
+          <Route path="/student/notifications" element={<ProtectedRoute><StudentNotificationsPage /></ProtectedRoute>} />
+          <Route path="/student/store" element={<ProtectedRoute><Store /></ProtectedRoute>} />
           {/* Admin Routes  */}
           <Route path="/admin/dashboard" element={<ProtectedRoute requiredRole={['admin']}><AdminDashboard /></ProtectedRoute>} />
           <Route path="/admin/invoices" element={<ProtectedRoute requiredRole={['admin']}><AdminInvoicesPage /></ProtectedRoute>} />
@@ -286,6 +287,7 @@ const AppRoutes = () => {
           {/* Shared Routes */}
           <Route path="/teachers" element={<TeachersPage />} />
           <Route path="/teachers/:teacherSlug" element={<TeacherProfile />} />
+          <Route path="/experts" element={<ExpertsPage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/mission" element={<MissionPage />} />
           <Route path="/contact" element={<ContactPage />} />
@@ -310,7 +312,7 @@ const AppRoutesWithTenant = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black">
-        <SparkLoader text="Know It All" color="white" size={56} />
+        <SparkLoader text="Wisora" color="white" size={56} />
       </div>
     );
   }
@@ -344,7 +346,7 @@ const App = () => (
                   <TenantProvider>
                     <Suspense fallback={
                       <div className="min-h-screen flex items-center justify-center bg-black">
-                        <SparkLoader text="Know It All" color="white" size={56} />
+                        <SparkLoader text="Wisora" color="white" size={56} />
                       </div>
                     }>
                       <BrowserRouter>

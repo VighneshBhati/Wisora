@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { auth } from "@/integrations/firebase/client";
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -40,7 +41,7 @@ const RedeemPage = () => {
       setLoading(true);
       console.log('Attempting to redeem code:', code);
 
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      const user = auth.currentUser; const userError = null;
       if (userError || !user) {
         toast({
           title: t('redeemPage.error'),

@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { BookOpen, Users, Star } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -25,7 +25,7 @@ export function TeacherTeachingProgress({ stats }: TeacherTeachingProgressProps)
           <Star className="h-6 w-6" />
           Expert Performance Overview
         </CardTitle>
-        <CardDescription>Your impact as a KIA verified expert</CardDescription>
+        <CardDescription>Your impact as a Wisora verified expert</CardDescription>
       </CardHeader>
       <CardContent className="relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -63,3 +63,4 @@ export function TeacherTeachingProgress({ stats }: TeacherTeachingProgressProps)
     </Card>
   );
 }
+

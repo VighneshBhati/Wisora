@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/store/store";
 import { supabase } from "@/integrations/supabase/client";
+import { auth } from "@/integrations/firebase/client";
+import { updateEmail, updatePassword, updateProfile } from "firebase/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -53,16 +55,18 @@ export const AccountTab = () => {
     if (!user) return;
     setSavingProfile(true);
     try {
-      const { error: authError } = await supabase.auth.updateUser({
-        email: email !== user.email ? email : undefined,
-        data: { full_name: displayName, display_name: displayName },
-      });
-      if (authError) throw authError;
+      const firebaseUser = auth.currentUser;
+      if (firebaseUser) {
+        await updateProfile(firebaseUser, { displayName });
+        if (email !== user.email) {
+          await updateEmail(firebaseUser, email);
+        }
+      }
 
-      // Try updating profiles table if it exists
+      // Update profiles table in Supabase DB
       await supabase
         .from("profiles")
-        .upsert({ id: user.id, display_name: displayName, avatar_url: avatarUrl }, { onConflict: "id" });
+        .upsert({ id: user.id, full_name: displayName, avatar_url: avatarUrl }, { onConflict: "id" });
 
       toast.success("Profile updated successfully");
     } catch (err: any) {
@@ -83,8 +87,9 @@ export const AccountTab = () => {
     }
     setSavingPassword(true);
     try {
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
-      if (error) throw error;
+      const firebaseUser = auth.currentUser;
+      if (!firebaseUser) throw new Error('Not authenticated');
+      await updatePassword(firebaseUser, newPassword);
       toast.success("Password changed successfully");
       setNewPassword("");
       setConfirmPassword("");
@@ -108,7 +113,10 @@ export const AccountTab = () => {
       if (uploadError) throw uploadError;
       const { data } = supabase.storage.from("avatars").getPublicUrl(path);
       setAvatarUrl(data.publicUrl);
-      await supabase.auth.updateUser({ data: { avatar_url: data.publicUrl } });
+      const firebaseUser = auth.currentUser;
+      if (firebaseUser) {
+        await updateProfile(firebaseUser, { photoURL: data.publicUrl });
+      }
       toast.success("Avatar updated");
     } catch (err: any) {
       toast.error(err.message || "Failed to upload avatar");

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { auth } from "@/integrations/firebase/client";
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -73,14 +74,14 @@ export const StudentGroups = () => {
     if (!confirm(t('studentGroups.confirmLeaveGroup', { groupName }))) return;
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       if (!user) return;
 
       const { error } = await supabase
         .from('group_members')
         .delete()
         .eq('group_id', groupId)
-        .eq('student_id', user.id);
+        .eq('student_id', user.uid);
 
       if (error) throw error;
 

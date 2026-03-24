@@ -11,7 +11,7 @@ import {
   generateLightThemeColors
 } from '@/utils/colorUtils';
 
-export const PLATFORM_NAME = "KIA"
+export const PLATFORM_NAME = "Wisora"
 export const API_URL = import.meta.env.VITE_API_URL;
 
 // Base primary color - this is the ONLY hardcoded color, everything else is calculated

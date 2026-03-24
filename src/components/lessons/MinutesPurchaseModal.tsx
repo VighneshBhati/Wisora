@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { auth } from "@/integrations/firebase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -40,7 +41,7 @@ export const MinutesPurchaseModal: React.FC<MinutesPurchaseModalProps> = ({
       setLoading(true);
       
       // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       if (!user) {
         toast({
           title: 'Authentication Error',
@@ -54,7 +55,7 @@ export const MinutesPurchaseModal: React.FC<MinutesPurchaseModalProps> = ({
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('wallet')
-        .eq('id', user.id)
+        .eq('id', user.uid)
         .single();
 
       if (profileError) {

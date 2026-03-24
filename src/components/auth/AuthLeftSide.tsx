@@ -31,17 +31,16 @@ export const AuthLeftSide: React.FC<AuthLeftSideProps> = ({
   // Get the next parameter from URL
   const nextParam = searchParams.get('next');
 
-  // Handle authentication redirects
+  // Handle authentication redirects — redirect whenever user becomes authenticated,
+  // regardless of mode (covers Google popup which can fire from any mode)
   useEffect(() => {
-    if (mode === 'login' && login.isAuthenticated && login.user) {
-      const redirectPath = getIntendedDestination(nextParam, login.user);
-      navigate(redirectPath);
+    const user = login.user || signup.user;
+    const isAuthenticated = login.isAuthenticated || signup.isAuthenticated;
+    if (isAuthenticated && user) {
+      const redirectPath = getIntendedDestination(nextParam, user);
+      navigate(redirectPath, { replace: true });
     }
-    if (mode === 'signup' && signup.isAuthenticated && signup.user) {
-      const redirectPath = getIntendedDestination(nextParam, signup.user);
-      navigate(redirectPath);
-    }
-  }, [mode, login.isAuthenticated, login.user, signup.isAuthenticated, signup.user, navigate, nextParam]);
+  }, [login.isAuthenticated, login.user, signup.isAuthenticated, signup.user, navigate, nextParam]);
 
   return (
     <div className="w-full h-screen md:w-1/2 bg-transparent flex flex-col min-h-0 relative">

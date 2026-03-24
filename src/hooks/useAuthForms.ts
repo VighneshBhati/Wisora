@@ -1,11 +1,18 @@
 import { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signInWithPopup,
+  updateProfile,
+} from 'firebase/auth';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { auth, db, googleProvider } from '@/integrations/firebase/client';
 import { useSelector } from 'react-redux';
 import type { RootState } from '@/store/store';
-import { useLocation, Navigate, useSearchParams } from 'react-router-dom';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import { buildOAuthCallbackUrl } from '@/utils/authRedirect';
 
-// Login form logic
+// ── Login ──────────────────────────────────────────────────────────────────
 export function useLoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -21,35 +28,22 @@ export function useLoginForm() {
     setLoading(true);
     setError('');
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      if (error) throw error;
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
-      setError(errorMessage);
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Login failed';
+      setError(friendlyError(msg));
     } finally {
       setLoading(false);
     }
   };
 
   const handleGoogleLogin = async () => {
+    setError('');
     try {
-      // Get the next parameter to preserve it in OAuth flow
-      const nextParam = searchParams.get('next');
-      const redirectTo = buildOAuthCallbackUrl(nextParam);
-
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo
-        }
-      });
-      if (error) throw error;
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
-      setError(errorMessage);
+      await signInWithPopup(auth, googleProvider);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Google sign-in failed';
+      setError(friendlyError(msg));
     }
   };
 
@@ -63,7 +57,7 @@ export function useLoginForm() {
   };
 }
 
-// Signup form logic
+// ── Signup ─────────────────────────────────────────────────────────────────
 export function useSignupForm() {
   const [formData, setFormData] = useState({
     email: '',
@@ -84,47 +78,34 @@ export function useSignupForm() {
     setError('');
     setSuccess('');
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const { user: firebaseUser } = await createUserWithEmailAndPassword(
+        auth,
+        formData.email,
+        formData.password
+      );
+
+      // Update display name
+      await updateProfile(firebaseUser, { displayName: formData.fullName });
+
+      // Create Firestore profile
+      await setDoc(doc(db, 'profiles', firebaseUser.uid), {
+        id: firebaseUser.uid,
         email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
-            full_name: formData.fullName,
-            role: formData.role,
-            phone: formData.phone,
-          },
-        },
+        full_name: formData.fullName,
+        role: formData.role,
+        phone_number: formData.phone,
+        avatar_url: null,
+        wallet: 0,
+        minutes: 0,
+        daily_free_minutes_used: 0,
+        last_free_minutes_reset: null,
+        created_at: new Date().toISOString(),
       });
-      if (error) throw error;
-      
-      // Manually create profile since database trigger might not be working
-      if (data.user) {
-        try {
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .insert({
-              id: data.user.id,
-              email: formData.email,
-              full_name: formData.fullName,
-              role: formData.role,
-              phone_number: formData.phone,
-            });
-          
-          if (profileError) {
-            console.warn('Profile creation warning:', profileError);
-            // Don't fail the signup if profile creation fails
-          }
-        } catch (profileError: unknown) {
-          const errorMessage = profileError instanceof Error ? profileError.message : 'Profile creation failed';
-          console.warn('Profile creation error:', errorMessage);
-          // Don't fail the signup if profile creation fails
-        }
-      }
-      
-      setSuccess('Account created successfully! Please check your email to verify your account.');
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
-      setError(errorMessage);
+
+      setSuccess('Account created successfully! You are now signed in.');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Signup failed';
+      setError(friendlyError(msg));
     } finally {
       setLoading(false);
     }
@@ -137,4 +118,19 @@ export function useSignupForm() {
     isAuthenticated, user,
     handleSignup,
   };
-} 
+}
+
+// ── Helper ─────────────────────────────────────────────────────────────────
+function friendlyError(msg: string): string {
+  if (msg.includes('user-not-found') || msg.includes('wrong-password') || msg.includes('invalid-credential'))
+    return 'Invalid email or password.';
+  if (msg.includes('email-already-in-use'))
+    return 'An account with this email already exists.';
+  if (msg.includes('weak-password'))
+    return 'Password should be at least 6 characters.';
+  if (msg.includes('invalid-email'))
+    return 'Please enter a valid email address.';
+  if (msg.includes('popup-closed-by-user'))
+    return 'Sign-in popup was closed. Please try again.';
+  return msg;
+}

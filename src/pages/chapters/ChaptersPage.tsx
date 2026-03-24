@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { auth } from "@/integrations/firebase/client";
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -44,7 +45,7 @@ export const ChaptersPage = () => {
 
   const fetchChapters = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       // Get published chapters with instructor info
       let chaptersQuery = supabase
         .from('chapters')
@@ -65,7 +66,7 @@ export const ChaptersPage = () => {
         const { data: enrollments, error: enrollmentError } = await supabase
           .from('chapter_enrollments')
           .select('chapter_id')
-          .eq('student_id', user.id);
+          .eq('student_id', user.uid);
         if (enrollmentError) throw enrollmentError;
         enrolledChapterIds = enrollments?.map((e) => e.chapter_id) || [];
       }
@@ -115,7 +116,7 @@ export const ChaptersPage = () => {
 
   const enrollInChapter = async (chapterId: string) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       if (!user) return;
 
       const result = await supabase.rpc('enroll_chapter_with_payment', {

@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+﻿import React, { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
@@ -182,7 +182,7 @@ const CTA: React.FC = () => {
         </div>
 
         <div className="text-center text-lg mb-8 md:text-xl text-black relative z-20">
-          Join thousands of individuals, institutions, and experts already on KIA. 
+          Join thousands of individuals, institutions, and experts already on Wisora. 
           Book a trial session from ₹99 and experience the difference.
         </div>
 
@@ -195,3 +195,4 @@ const CTA: React.FC = () => {
 };
 
 export default CTA;
+
